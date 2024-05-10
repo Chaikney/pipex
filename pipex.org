@@ -13,7 +13,7 @@ Bonuses for:
 - << and >> "when the first parameter is "here_doc""
   What does << and >> do, then?
 * manpages (or equivalent) to read for this
-- [ ] pipe
+- [X] pipe
   I assume pipe2 (with the flags) is off limits.
  #+begin_src c
 #include <unistd.h>
@@ -21,9 +21,14 @@ int	pipe(int pipefd[2]);
  #+end_src
  Opens a pipe with 2 fds (0 = read end, 1 = write end).
  returns 0 on success, -1 on failure.
-  - [?] where do we get the two fds from? can have stdin and stdout, but we are also passing things to commands, so how do we get the fd for the inopout to those. Is it the same as the PID?
-- [ ] perror
-- [ ] strerror
+  - [?] where do we get the two fds from? can have stdin and stdout, but we are also passing things to commands, so how do we get the fd for the inpout to those. Is it the same as the PID?
+- [X] perror
+  Print system error message -- looks useful for tidier crashes.      src_c{void perror(const char *s);}
+
+- [X] strerror
+  returns a pointer to a string describing an errorcode. Use with perror, requires string.h
+  src_c{char *strerror(int errnum);}
+
 - [X] access
   int access(const char *pathname, int mode);
   Checks if the calling process (i.e. our program?) is able to access the file at pathname.
@@ -84,6 +89,10 @@ void exit (int status);
 ** read parameters and check that the commands exist(?)
 Do they have to?
 Use access to make sure that we can do things with them (X_OK?)
+"is this a file / is this a command"
+** launch a new command
+** open file 1 for reading
+** open file 2 for writing
 * presubmission checklist
 - [ ] remove stdio.h from my files
 - [ ] remove spare (ft_)printfs
