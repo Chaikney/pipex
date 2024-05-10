@@ -24,7 +24,7 @@ int	pipe(int pipefd[2]);
   - [?] where do we get the two fds from? can have stdin and stdout, but we are also passing things to commands, so how do we get the fd for the inopout to those. Is it the same as the PID?
 - [ ] perror
 - [ ] strerror
-- [ ] access
+- [X] access
   int access(const char *pathname, int mode);
   Checks if the calling process (i.e. our program?) is able to access the file at pathname.
   modes:
@@ -37,17 +37,17 @@ int	pipe(int pipefd[2]);
   - W_OK
     writable
 
-- [ ] dup
+- [X] dup
   duplicate a file descriptor
   - [?] why would you want to do that?
     Maybe the close-on-exec flag?
     #+begin_quote
     The two file descriptors do not share file  descriptor  flags  (the  close-on-exec flag).   The  close-on-exec  flag (FD_CLOEXEC; see fcntl(2)) for the duplicate de‐ scriptor is off.
 #+end_quote
-- [ ] dup2
+- [X] dup2
   Like dup but it allows you to specify the newfd to use.
   Both functions return the new fd on success, -1 if no.
-- [ ] execve
+- [X] execve
   #+begin_src c
 int execve(const char *pathname, char *const argv[], char *const envp[]);
 #+end_src
@@ -56,7 +56,7 @@ int execve(const char *pathname, char *const argv[], char *const envp[]);
  #+begin_quote
 By  default, file descriptors remain open across an execve().  File descriptors that are marked close-on-exec are closed; see the description of FD_CLOEXEC  in fcntl(2).
  #+end_quote
-- [ ] exit
+- [X] exit
   - man 2 exit.
   There is _Exit() or _exit() which terminate the calling process "immediately". That is *not* the one we're looking for.
   - man 3 exit
@@ -66,19 +66,24 @@ void exit (int status);
    #+end_src
     Causes normal process termination and "the least significant byte of status is returned to the parent".
     I have used this already and EXIT_SUCCESS and EXIT_FAILURE are standard so I can use them, probably useful here.
-- [ ] fork
+- [X] fork
   Creates a new process by duplicating the calling process
   - [?] Why would we want to do that?
-- [ ] unlink
+- [X] unlink
   delete a name and possibly the file it refers to. (man 2 unlink) If its the last link to it, it goes provided there are no processes with it open.
   Another one that I need to know what the pieces of the puzzle are,
-- [ ] wait & waitpid
+- [X] wait & waitpid
 	src_c{pid_t waitpid(pid_t pid, int *wstatus, int options);}
   So similar to wait that they share man pages (man 2 wait).
   Wait for state changes in a child of the calling process:
  - terminated
  - stopped by a signal
  - resumed by a signal
+* Possible task breakdown
+** open link to stdin and stdout
+** read parameters and check that the commands exist(?)
+Do they have to?
+Use access to make sure that we can do things with them (X_OK?)
 * presubmission checklist
 - [ ] remove stdio.h from my files
 - [ ] remove spare (ft_)printfs
@@ -88,7 +93,3 @@ void exit (int status);
 - [ ] run all the tests again on the fresh
 - [ ] remove tasks.org from main, put in dev branch
 - [ ] Silence compilation subtasks (e.g. libft calls)
-* Possible task breakdown
-** open link to stdin and stdout
-** read parameters and check that the commands exist(?)
-Do they have to?
