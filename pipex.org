@@ -1,0 +1,61 @@
+#+title:     pipex
+#+author:    Chris Haikney
+#+email:     chaikney@student.42urduliz.com
+* requirements
+src_sh{./pipex file1 cmd1 cmd2 file2}
+must behave the same as:
+src_sh{< file1 cmd1 | cmd2 >file2}
+So first question is what exactly is that behaviour?
+And what is its error handling like?
+Bonuses for:
+- multiple pipes
+  Sounds like a design / extendibility thing.
+- << and >> "when the first parameter is "here_doc""
+  What does << and >> do, then?
+* manpages (or equivalent) to read for this
+- [ ] pipe
+  I assume pipe2 (with the flags) is off limits.
+ #+begin_src c
+#include <unistd.h>
+int	pipe(int pipefd[2]);
+ #+end_src
+ Opens a pipe with 2 fds (0 = read end, 1 = write end).
+ returns 0 on success, -1 on failure.
+  - [?] where do we get the two fds from? can have stdin and stdout, but we are also passing things to commands, so how do we get the fd for the inopout to those. Is it the same as the PID?
+- [ ] perror
+- [ ] strerror
+- [ ] access
+- [ ] dup
+  duplicate a file descriptor
+  - [?] why would you want to do that?
+    Maybe the close-on-exec flag?
+    #+begin_quote
+    The two file descriptors do not share file  descriptor  flags  (the  close-on-exec flag).   The  close-on-exec  flag (FD_CLOEXEC; see fcntl(2)) for the duplicate de‐ scriptor is off.
+#+end_quote
+- [ ] dup2
+  Like dup but it allows you to specify the newfd to use.
+  Both functions return the new fd on success, -1 if no.
+- [ ] execve
+  #+begin_src c
+int execve(const char *pathname, char *const argv[], char *const envp[]);
+#+end_src
+  This is what would run cmd1 and cmd2 I think.
+  Potentially complicated callsig, if you pass envvars at the end. And this note relates to dup above.
+ #+begin_quote
+By  default, file descriptors remain open across an execve().  File descriptors that are marked close-on-exec are closed; see the description of FD_CLOEXEC  in fcntl(2).
+ #+end_quote
+- [ ] exit
+- [ ] fork
+  Creates a new process by duplicating the calling process
+  - [?] Why would we want to do that?
+- [ ] unlink
+  delete a name and possibly the file it refers to. (man 2 unlink) If its the last link to it, it goes provided there are no processes with it open.
+  Another one that I need to know what the pieces of the puzzle are,
+- [ ] wait
+  Careful here, may be a shell builtin. We want man 2 wait
+  Waits for a process to change state. So here that would be, a command having finished?
+- [ ] waitpid
+* Possible task breakdown
+** open link to stdin and stdout
+** read parameters and check that the commands exist(?)
+Do they have to?
