@@ -14,5 +14,8 @@
 # define PIPEX_H
 
 # include <stdarg.h>
+# include <stdio.h>	// TODO remove when I get rid of the printfs (maybe)
+# include <fcntl.h>	// open
+# include <unistd.h>	// access, pipe
 
 #endif

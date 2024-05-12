@@ -30,6 +30,7 @@ int	pipe(int pipefd[2]);
   src_c{char *strerror(int errnum);}
 
 - [X] access
+  from unistd.h
   int access(const char *pathname, int mode);
   Checks if the calling process (i.e. our program?) is able to access the file at pathname.
   modes:
@@ -90,9 +91,35 @@ void exit (int status);
 Do they have to?
 Use access to make sure that we can do things with them (X_OK?)
 "is this a file / is this a command"
+- cmd1 and 2 must be searched for in the PATH.
+** reading from PATH
+- available in envp.
+- what is that's format? SOme things are :-separated.
+- join cmd to a PATH part and see if we get X_OK
 ** launch a new command
 ** open file 1 for reading
 ** open file 2 for writing
+* Introducing envp
+This is a third argument to main, widely used in unix systems, it gives access to the environment variables. Otherwise you would use getenv or something.
+src_c{int	main(int argc, char *argv[], char *envp[])}
+https://www.gnu.org/software/libc/manual/html_node/Program-Arguments.html
+** Finding PATH in envp
+You want a line which *begins* with PATH=
+The possibilities are split with : and do *not* have a trailing /
+* What have others done?
+https://github.com/gabcollet/pipex/tree/master
+- find path is its own function.
+  Much complicated shuffling around forks -- why?
+** What the fork is going on?
+a parent process and a child process, a process created by a fork and then wait-ed for, for an unclear purpose.
+Apparently fork-then-exec is the way that unix has *always* run a new program.
+- fork is a complete copy of the calling process,
+- _until_ it execs a new program at which point they differ.
+  In the example program, I dont much understand the parent and child ordering, seems to be backwards? Ignore the names. One takes the first program and puts its output into a pipe. The other (the one that was copied?) sits around until one of its child processes changes state.
+  When the state has changed, that means that we have output from the child process. So the fork-ed fds are then available to get tied to the input of the second process.
+(- Remember that pipe returns 2 fds at either end of the pipe.)
+- the fork ed process is wait-ed for -- waitpid returns when there is a change of state in its child process.
+- What does dup2 do in these two things? It is working with the fds.
 * presubmission checklist
 - [ ] remove stdio.h from my files
 - [ ] remove spare (ft_)printfs
