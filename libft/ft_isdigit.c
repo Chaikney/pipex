@@ -1,22 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.h                                            :+:      :+:    :+:   */
+/*   ft_isdigit.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: chaikney <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/10 14:30:35 by chaikney          #+#    #+#             */
-/*   Updated: 2024/05/10 14:30:37 by chaikney         ###   ########.fr       */
+/*   Created: 2023/04/17 14:31:36 by chaikney          #+#    #+#             */
+/*   Updated: 2023/04/24 14:32:32 by chaikney         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PIPEX_H
-# define PIPEX_H
+// returns zero if false and non-zero if true. The value of the argument must
+// be representable as an unsigned char or the value of EOF.
+#include "libft.h"
 
-# include <stdarg.h>	// parameter handling
-# include <stdio.h>	// TODO remove when I get rid of the printfs (maybe)
-# include <fcntl.h>	// open
-# include <unistd.h>	// access, pipe
-# include "libft/libft.h"
+int	ft_isdigit(int c)
+{
+	int	retcode;
 
-#endif
+	retcode = 0;
+	if (!c)
+		return (retcode);
+	if ((ft_isascii(c) == 1) && (c >= 48) && (c <= 57))
+		retcode = 1;
+	return (retcode);
+}

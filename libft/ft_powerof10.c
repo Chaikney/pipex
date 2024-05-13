@@ -1,22 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.h                                            :+:      :+:    :+:   */
+/*   ft_powerof10.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: chaikney <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/10 14:30:35 by chaikney          #+#    #+#             */
-/*   Updated: 2024/05/10 14:30:37 by chaikney         ###   ########.fr       */
+/*   Created: 2023/08/23 18:12:36 by chaikney          #+#    #+#             */
+/*   Updated: 2023/08/23 18:12:42 by chaikney         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PIPEX_H
-# define PIPEX_H
+// Returns 10 to the power of n
+// NOTE n has to be >0 I could improve that except that needs a float return.
+int	ft_powerof10(int n)
+{
+	int	i;
+	int	answer;
 
-# include <stdarg.h>	// parameter handling
-# include <stdio.h>	// TODO remove when I get rid of the printfs (maybe)
-# include <fcntl.h>	// open
-# include <unistd.h>	// access, pipe
-# include "libft/libft.h"
-
-#endif
+	answer = 10;
+	if (n == 0)
+		return (1);
+	i = 1;
+	while (i++ < n)
+		answer = answer * 10;
+	return (answer);
+}

@@ -1,22 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.h                                            :+:      :+:    :+:   */
+/*   ft_bzero.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: chaikney <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/10 14:30:35 by chaikney          #+#    #+#             */
-/*   Updated: 2024/05/10 14:30:37 by chaikney         ###   ########.fr       */
+/*   Created: 2023/04/19 13:11:19 by chaikney          #+#    #+#             */
+/*   Updated: 2023/04/24 12:57:35 by chaikney         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PIPEX_H
-# define PIPEX_H
+#include "libft.h"
 
-# include <stdarg.h>	// parameter handling
-# include <stdio.h>	// TODO remove when I get rid of the printfs (maybe)
-# include <fcntl.h>	// open
-# include <unistd.h>	// access, pipe
-# include "libft/libft.h"
+// Overwrites an area with NULL
+// Starts at s and runs for n characters.
+void	ft_bzero(void *s, size_t n)
+{
+	unsigned char	*str;
 
-#endif
+	if (!n)
+		return ;
+	str = (unsigned char *) s;
+	while (n > 0)
+	{
+		*str = '\0';
+		str++;
+		n--;
+	}
+	return ;
+}

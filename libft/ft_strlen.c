@@ -1,22 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.h                                            :+:      :+:    :+:   */
+/*   ft_strlen.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: chaikney <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/10 14:30:35 by chaikney          #+#    #+#             */
-/*   Updated: 2024/05/10 14:30:37 by chaikney         ###   ########.fr       */
+/*   Created: 2023/04/17 15:10:18 by chaikney          #+#    #+#             */
+/*   Updated: 2023/04/21 14:48:06 by chaikney         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PIPEX_H
-# define PIPEX_H
+#include "libft.h"
 
-# include <stdarg.h>	// parameter handling
-# include <stdio.h>	// TODO remove when I get rid of the printfs (maybe)
-# include <fcntl.h>	// open
-# include <unistd.h>	// access, pipe
-# include "libft/libft.h"
+// return the length of a string, NOT including its NULL byte.
+// NOTE this is not protected against non-NT'd strings.
+size_t	ft_strlen(const char *str)
+{
+	size_t	length;
 
-#endif
+	length = 0;
+	if (!str)
+		return (length);
+	while (str[length] != '\0')
+		length++;
+	return (length);
+}

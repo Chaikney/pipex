@@ -1,22 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.h                                            :+:      :+:    :+:   */
+/*   ft_hasnewline.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: chaikney <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/10 14:30:35 by chaikney          #+#    #+#             */
-/*   Updated: 2024/05/10 14:30:37 by chaikney         ###   ########.fr       */
+/*   Created: 2023/08/21 14:00:31 by chaikney          #+#    #+#             */
+/*   Updated: 2023/08/21 14:00:40 by chaikney         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PIPEX_H
-# define PIPEX_H
+#include "libft.h"
 
-# include <stdarg.h>	// parameter handling
-# include <stdio.h>	// TODO remove when I get rid of the printfs (maybe)
-# include <fcntl.h>	// open
-# include <unistd.h>	// access, pipe
-# include "libft/libft.h"
+// Returns 1 if newline present, 0 if absent or s is empty
+// NOTE requires a NT'd string, can I protect it better?
+int	ft_hasnewline(char *s)
+{
+	int	i;
 
-#endif
+	if (!s)
+		return (0);
+	i = 0;
+	while (s[i] != '\0')
+	{
+		if (s[i] == '\n')
+			return (1);
+		i++;
+	}
+	return (0);
+}

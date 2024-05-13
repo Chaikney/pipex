@@ -1,22 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.h                                            :+:      :+:    :+:   */
+/*   pf_putsigned_fd.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: chaikney <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/10 14:30:35 by chaikney          #+#    #+#             */
-/*   Updated: 2024/05/10 14:30:37 by chaikney         ###   ########.fr       */
+/*   Created: 2023/10/16 10:36:54 by chaikney          #+#    #+#             */
+/*   Updated: 2023/10/16 10:37:00 by chaikney         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PIPEX_H
-# define PIPEX_H
+#include "libft.h"
 
-# include <stdarg.h>	// parameter handling
-# include <stdio.h>	// TODO remove when I get rid of the printfs (maybe)
-# include <fcntl.h>	// open
-# include <unistd.h>	// access, pipe
-# include "libft/libft.h"
+// Takes signed int, puts a "-" if needed then calls pf_put_unsigned_fd.
+int	pf_put_signed_fd(int nbr, int fd)
+{
+	int	put;
 
-#endif
+	put = 0;
+	if (nbr < 0)
+	{
+		put += pf_putchar_fd('-', fd);
+		nbr *= -1;
+	}
+	put += pf_put_unsigned_fd(nbr, fd);
+	return (put);
+}

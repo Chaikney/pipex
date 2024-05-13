@@ -27,9 +27,9 @@ HEADERS	= -I $(FTDIR)
 
 all: $(NAME)
 
-$(NAME): $(OBJ)
-	$(CC) $(OBJ) -o $(NAME)
-#	$(CC) $(OBJ) $(HEADERS) $(FTLIB) -o $(NAME)
+$(NAME): libft $(OBJ)
+#	$(CC) $(OBJ) -o $(NAME)
+	$(CC) $(OBJ) $(HEADERS) $(FTLIB) -o $(NAME)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -43,10 +43,10 @@ clean:
 	/bin/rm -f *.o
 	/bin/rm -f __.SYMDEF
 	/bin/rm -rf *.dSYM
-#	make clean -C $(FTDIR)
+	make clean -C $(FTDIR)
 
 fclean: clean
 	/bin/rm -f $(NAME)
-#	make fclean -C $(FTDIR)
+	make fclean -C $(FTDIR)
 
 re: fclean all

@@ -1,22 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.h                                            :+:      :+:    :+:   */
+/*   pf_putunsigned_fd.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: chaikney <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/10 14:30:35 by chaikney          #+#    #+#             */
-/*   Updated: 2024/05/10 14:30:37 by chaikney         ###   ########.fr       */
+/*   Created: 2023/10/16 10:35:45 by chaikney          #+#    #+#             */
+/*   Updated: 2023/10/16 10:35:52 by chaikney         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PIPEX_H
-# define PIPEX_H
+#include "libft.h"
+// Takes unsigned int and uses recursive division to find the digits.
+// Uses a string lookup with putchar to print the output to file descriptor fd.
+int	pf_put_unsigned_fd(unsigned int nbr, int fd)
+{
+	int	put;
 
-# include <stdarg.h>	// parameter handling
-# include <stdio.h>	// TODO remove when I get rid of the printfs (maybe)
-# include <fcntl.h>	// open
-# include <unistd.h>	// access, pipe
-# include "libft/libft.h"
-
-#endif
+	put = 1;
+	if (nbr >= 10)
+		put = put + pf_put_unsigned_fd((nbr / 10), fd);
+	pf_putchar_fd("0123456789"[nbr % 10], fd);
+	return (put);
+}
