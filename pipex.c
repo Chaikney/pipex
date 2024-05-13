@@ -12,25 +12,27 @@
 
 #include "pipex.h"
 #include "libft/libft.h"
+#include <unistd.h>
 
 // Given the environment variables, return the line containing the PATH
 // FIXED Segfaults as there is no protection for a blank PATH in strncmp
 // (Still can happen but there will (must?!) always be something in envp)
 char	*find_path(char **envp)
 {
-    ft_printf("line is: %s", *envp);
+//    ft_printf("line is: %s", *envp);
     while (*envp != NULL)
     {
-        ft_printf("line is: %s", *envp);
+ //       ft_printf("line is: %s", *envp);
         if (ft_strncmp(*envp, "PATH=", 5) == 0)
             break;
         envp++;
     }
-    ft_printf("line is: %s", *envp);
+  //  ft_printf("line is: %s", *envp);
     return (*envp);
 }
 
 // print the lines given, like in an argv array.
+// TODO Remove before submission, for debugging only.
 void	print_args(char **arg)
 {
     while (*arg != NULL)
@@ -39,6 +41,42 @@ void	print_args(char **arg)
         arg++;
     }
 }
+
+// Go through PATH entries and see if cmd is locatable.
+// DONE Need a / between cmd and pathparts
+// (I think the memopry approach here is a bit suspect..)
+// TODO Discard the first five chars of path (i.e. PATH=)
+// FIXED Memory leaks, need to free after strjoin
+// FIXME Free one last part from ft_split.
+// TODO Should this return a fully-qualified path to use?
+int	find_command(char *path, char *cmd)
+{
+	char	**pathparts;
+	char	*candidate;
+
+//    cmd = ft_strjoin("/", cmd);
+	pathparts = ft_split(path, ':');
+	while (*pathparts != NULL)
+	{
+		candidate = ft_strjoin(*pathparts, cmd);
+		ft_printf("\n%s", candidate);
+		if (access(candidate, X_OK) == 0)
+            break ;
+        free (candidate);
+        free (*pathparts);
+		pathparts++;
+	}
+    while (*pathparts != NULL)
+    {
+        free (*pathparts);
+        pathparts++;
+    }
+//    free (pathparts);
+    ft_printf("\nI choose: %s", candidate);
+    free(candidate);
+	return (0);
+}
+
 // Read arguments
 // Check that they are valid:
 // - file1 exists and is readable
@@ -51,16 +89,17 @@ void	print_args(char **arg)
 // -- add cmd var to path
 // -- test it exists
 // -- use it in execve
-// TODO Write a function to print the envp (could also do argvs)
+// TODO Split path and use it to locate cmd1 and cmd2
 int	main(int argc, char *argv[], char *envp[])
 {
     int	in;
     int	out;
     char	*path;
+    char	*cmd1;
 //     char	*prog;
 
-    print_args(argv);
-    print_args(envp);
+    /* print_args(argv); */
+    /* print_args(envp); */
     if (argc == 5)
     {
         printf("First file: %s\n", argv[1]);
@@ -69,15 +108,14 @@ int	main(int argc, char *argv[], char *envp[])
         printf("and the results saved in: %s\n", argv[4]);
         in = open(argv[1], O_RDONLY);
         out = open(argv[4], O_CREAT);
-        if (access(argv[2], X_OK) == 0)
-            printf("I could run this");
-        if (access(argv[3], X_OK) == 0)
-            printf("I could run this");
-        execve(argv[2], &argv[1], NULL);
+        cmd1 = ft_strjoin("/", argv[2]);
         path = find_path(envp);
         ft_printf("\nFound path: %s", path);
+        ft_printf("\nSeeking cmd...");
+        find_command(path, cmd1);
         (void) in;
         (void) out;
     }
+    free (cmd1);
     return(0);
 }
