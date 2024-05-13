@@ -11,6 +11,24 @@
 /* ************************************************************************** */
 
 #include "pipex.h"
+#include "libft/libft.h"
+
+// Given the environment variables, return the line containing the PATH
+// FIXED Segfaults as there is no protection for a blank PATH in strncmp
+// (Still can happen but there will (must?!) always be something in envp)
+char	*find_path(char **envp)
+{
+    ft_printf("line is: %s", *envp);
+    while (*envp != NULL)
+    {
+        ft_printf("line is: %s", *envp);
+        if (ft_strncmp(*envp, "PATH=", 5) == 0)
+            break;
+        envp++;
+    }
+    ft_printf("line is: %s", *envp);
+    return (*envp);
+}
 
 // print the lines given, like in an argv array.
 void	print_args(char **arg)
@@ -38,6 +56,7 @@ int	main(int argc, char *argv[], char *envp[])
 {
     int	in;
     int	out;
+    char	*path;
 //     char	*prog;
 
     print_args(argv);
@@ -55,6 +74,8 @@ int	main(int argc, char *argv[], char *envp[])
         if (access(argv[3], X_OK) == 0)
             printf("I could run this");
         execve(argv[2], &argv[1], NULL);
+        path = find_path(envp);
+        ft_printf("\nFound path: %s", path);
         (void) in;
         (void) out;
     }
