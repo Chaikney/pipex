@@ -14,30 +14,6 @@
 #include "libft/libft.h"
 #include <unistd.h>
 
-// Given the environment variables, return the line containing the PATH
-// FIXED Segfaults as there is no protection for a blank PATH in strncmp
-// (Still can happen but there will (must?!) always be something in envp)
-char	*find_path(char **envp)
-{
-    char	*c;
-//    ft_printf("line is: %s", *envp);
-    while (*envp != NULL)
-    {
- //       ft_printf("line is: %s", *envp);
-        if (ft_strncmp(*envp, "PATH=", 5) == 0)
-            break;
-        envp++;
-    }
-  //  ft_printf("line is: %s", *envp);
-    c = *envp;
-    while (*c != '=')
-        c++;
-    c++;
-    *envp = c;
-    ft_printf("the path i return is: %s", *envp);
-    return (*envp);
-}
-
 // print the lines given, like in an argv array.
 // TODO Remove before submission, for debugging only.
 void	print_args(char **arg)
@@ -55,7 +31,7 @@ void	print_args(char **arg)
 // TODO Discard the first five chars of path (i.e. PATH=)
 // NOTE Use ft_substr or trim
 // FIXED Memory leaks, need to free after strjoin
-// FIXME Free one last part from ft_split. What?
+// FIXME Free one last part from ft_split. What? secondary pointer.
 // TODO Should this return a fully-qualified path to use?
 // FIXME Invalid frees. This is a mess!
 // - add a leading / to cmd
@@ -101,6 +77,7 @@ char	*find_command(char *cmd, char **envp)
         free (*pathparts);
         pathparts++;
     }
+    free (pathparts);
 //    free(candidate);
     return (candidate);
 }
