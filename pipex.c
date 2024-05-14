@@ -19,6 +19,7 @@
 // (Still can happen but there will (must?!) always be something in envp)
 char	*find_path(char **envp)
 {
+    char	*c;
 //    ft_printf("line is: %s", *envp);
     while (*envp != NULL)
     {
@@ -28,6 +29,12 @@ char	*find_path(char **envp)
         envp++;
     }
   //  ft_printf("line is: %s", *envp);
+    c = *envp;
+    while (*c != '=')
+        c++;
+    c++;
+    *envp = c;
+    ft_printf("the path i return is: %s", *envp);
     return (*envp);
 }
 
@@ -46,35 +53,56 @@ void	print_args(char **arg)
 // DONE Need a / between cmd and pathparts
 // (I think the memopry approach here is a bit suspect..)
 // TODO Discard the first five chars of path (i.e. PATH=)
+// NOTE Use ft_substr or trim
 // FIXED Memory leaks, need to free after strjoin
-// FIXME Free one last part from ft_split.
+// FIXME Free one last part from ft_split. What?
 // TODO Should this return a fully-qualified path to use?
-int	find_command(char *path, char *cmd)
+// FIXME Invalid frees. This is a mess!
+// - add a leading / to cmd
+// - split the pieces of PATH so they can be checked
+// - (this also requires the first 5 chars of the line to be removed.)
+// - test the parts of path:
+// -- does path + cmd = an executable?
+// -- if YES we have our command: keep that and discard the rest.
+char	*find_command(char *cmd, char **envp)
 {
 	char	**pathparts;
 	char	*candidate;
+    char	*slashed;
 
 //    cmd = ft_strjoin("/", cmd);
-	pathparts = ft_split(path, ':');
+    while (*envp != NULL)
+    {
+        if (ft_strncmp(*envp, "PATH=", 5) == 0)
+            break;
+        envp++;
+    }
+    ft_printf("reading from: %s", *envp +5);
+ 	pathparts = ft_split(*envp + 5, ':');
 	while (*pathparts != NULL)
 	{
-		candidate = ft_strjoin(*pathparts, cmd);
-		ft_printf("\n%s", candidate);
+		slashed = ft_strjoin(*pathparts, "/");
+		ft_printf("\ntesting %s", slashed);
+        candidate = ft_strjoin(slashed, cmd);
+        free (slashed);
+        ft_printf("\t that equates to: %s", candidate);
 		if (access(candidate, X_OK) == 0)
             break ;
+        ft_printf("\tNo. freeing %s", candidate);
         free (candidate);
+        ft_printf("\tThen freeing residue %s", *pathparts);
         free (*pathparts);
 		pathparts++;
 	}
+    ft_printf("\nI choose: %s", candidate);
     while (*pathparts != NULL)
     {
+        ft_printf("\tThen freeing %s\n", *pathparts);
         free (*pathparts);
         pathparts++;
     }
-//    free (pathparts);
-    ft_printf("\nI choose: %s", candidate);
-    free(candidate);
-	return (0);
+//    free(candidate);
+    return (candidate);
 }
 
 // Read arguments
@@ -92,11 +120,7 @@ int	find_command(char *path, char *cmd)
 // TODO Split path and use it to locate cmd1 and cmd2
 int	main(int argc, char *argv[], char *envp[])
 {
-    int	in;
-    int	out;
-    char	*path;
-    char	*cmd1;
-//     char	*prog;
+     char	*prog;
 
     /* print_args(argv); */
     /* print_args(envp); */
@@ -106,16 +130,15 @@ int	main(int argc, char *argv[], char *envp[])
         printf("run in: %s\n", argv[2]);
         printf("then Piped to: %s\n", argv[3]);
         printf("and the results saved in: %s\n", argv[4]);
-        in = open(argv[1], O_RDONLY);
-        out = open(argv[4], O_CREAT);
-        cmd1 = ft_strjoin("/", argv[2]);
-        path = find_path(envp);
-        ft_printf("\nFound path: %s", path);
-        ft_printf("\nSeeking cmd...");
-        find_command(path, cmd1);
-        (void) in;
-        (void) out;
+        /* in = open(argv[1], O_RDONLY); */
+        /* out = open(argv[4], O_CREAT); */
+        // FIXME This malloc does not get freed.Because cmd1 is altered in find_command?
+        /* cmd1 = ft_strjoin("/", argv[2]); */
+        /* path = find_path(envp); */
+        /* ft_printf("\nFound path: %s", path); */
+        /* ft_printf("\nSeeking cmd..."); */
+        prog = find_command(argv[2], envp);
+    free (prog);
     }
-    free (cmd1);
     return(0);
 }
