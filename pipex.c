@@ -12,6 +12,8 @@
 
 #include "pipex.h"
 #include "libft/libft.h"
+#include <fcntl.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 // print the lines given, like in an argv array.
@@ -26,27 +28,23 @@ void	print_args(char **arg)
 }
 
 // Go through PATH entries and see if cmd is locatable.
-// DONE Need a / between cmd and pathparts
-// (I think the memopry approach here is a bit suspect..)
-// TODO Discard the first five chars of path (i.e. PATH=)
-// NOTE Use ft_substr or trim
-// FIXED Memory leaks, need to free after strjoin
-// FIXME Free one last part from ft_split. What? secondary pointer.
-// TODO Should this return a fully-qualified path to use?
-// FIXME Invalid frees. This is a mess!
 // - add a leading / to cmd
 // - split the pieces of PATH so they can be checked
 // - (this also requires the first 5 chars of the line to be removed.)
 // - test the parts of path:
 // -- does path + cmd = an executable?
 // -- if YES we have our command: keep that and discard the rest.
+// FIXME Free one last part from ft_split. What? secondary pointer.
+// TODO Should this return a fully-qualified path to use?
+// FIXME Invalid frees. This is a mess!
+// TODO Must split to get any parameters that may be part of the command
+// FIXME Segfaults if it cannot find the command
 char	*find_command(char *cmd, char **envp)
 {
 	char	**pathparts;
 	char	*candidate;
     char	*slashed;
 
-//    cmd = ft_strjoin("/", cmd);
     while (*envp != NULL)
     {
         if (ft_strncmp(*envp, "PATH=", 5) == 0)
@@ -87,17 +85,19 @@ char	*find_command(char *cmd, char **envp)
 // - file1 exists and is readable
 // - cmd1 & 2 exist and are executable
 // - file2 can be created. (open a fd to the path which is file2)
-// Run cmd1 with file1 - how?? Why would cmd1 look to stdin,
-// or what is the standard way to send it info? execve?
 // - find the executable by making a path out if it:
 // -- get system path vars
 // -- add cmd var to path
 // -- test it exists
 // -- use it in execve
-// TODO Split path and use it to locate cmd1 and cmd2
+// DONE Split path and use it to locate cmd1 and cmd2
+// TODO Call execve with located cmd
+// TODO fork and dup a process
+// TODO Stick two pieces together
 int	main(int argc, char *argv[], char *envp[])
 {
      char	*prog;
+     pid_t	child;
 
     /* print_args(argv); */
     /* print_args(envp); */
@@ -115,6 +115,11 @@ int	main(int argc, char *argv[], char *envp[])
         /* ft_printf("\nFound path: %s", path); */
         /* ft_printf("\nSeeking cmd..."); */
         prog = find_command(argv[2], envp);
+        child = fork();
+        if (child == -1)
+            exit(EXIT_FAILURE);
+        execve(prog, argv, envp);	// HACK I think the argv should be its own thing, have to make that?
+        waitpid(child, NULL, 0);	// NOTE No need for compicated options, I guess.
     free (prog);
     }
     return(0);
