@@ -51,33 +51,54 @@ char	*find_command(char *cmd, char **envp)
             break;
         envp++;
     }
-    ft_printf("reading from: %s", *envp +5);
+//    ft_printf("reading from: %s", *envp +5);
  	pathparts = ft_split(*envp + 5, ':');
 	while (*pathparts != NULL)
 	{
 		slashed = ft_strjoin(*pathparts, "/");
-		ft_printf("\ntesting %s", slashed);
+//		ft_printf("\ntesting %s", slashed);
         candidate = ft_strjoin(slashed, cmd);
-        free (slashed);
-        ft_printf("\t that equates to: %s", candidate);
+//        free (slashed);
+//        ft_printf("\t that equates to: %s", candidate);
 		if (access(candidate, X_OK) == 0)
             break ;
-        ft_printf("\tNo. freeing %s", candidate);
-        free (candidate);
-        ft_printf("\tThen freeing residue %s", *pathparts);
-        free (*pathparts);
+//        ft_printf("\tNo. freeing %s", candidate);
+ //       free (candidate);
+//        ft_printf("\tThen freeing residue %s", *pathparts);
+//        free (*pathparts);
 		pathparts++;
 	}
-    ft_printf("\nI choose: %s", candidate);
+//    ft_printf("\nI choose: %s", candidate);
     while (*pathparts != NULL)
     {
-        ft_printf("\tThen freeing %s\n", *pathparts);
-        free (*pathparts);
+//        ft_printf("\tThen freeing %s\n", *pathparts);
+ //       free (*pathparts);
         pathparts++;
     }
-    free (pathparts);
+//    free (pathparts);
 //    free(candidate);
     return (candidate);
+}
+
+// Wrap the things that you need to do to make the
+// command run in whatever process.
+// - split any arguments from cmd
+// -- We get an array with the cmd as first thing (same as when argv is read in a program)
+// - find cmd in PATH
+// - send it off to execve
+void	run_command(char *cmd, char **envp)
+{
+	char	*prog;
+    char	**args;
+
+    args =  ft_split(cmd, ' ');
+    print_args(args);
+    prog = find_command(args[0], envp);
+    if (!prog)
+        exit(EXIT_FAILURE);
+    if (execve(prog, args, envp) == -1)
+        exit(EXIT_FAILURE);
+    free (prog);
 }
 
 // Read arguments
@@ -90,23 +111,20 @@ char	*find_command(char *cmd, char **envp)
 // -- add cmd var to path
 // -- test it exists
 // -- use it in execve
-// DONE Split path and use it to locate cmd1 and cmd2
+// - make a pipe to put between processes
+// - Create a child process
+// - run cmd1, wait for it to return
+// - run cmd2
 // TODO Call execve with located cmd
 // TODO fork and dup a process
 // TODO Stick two pieces together
 int	main(int argc, char *argv[], char *envp[])
 {
-     char	*prog;
+     int	mario[2];
      pid_t	child;
 
-    /* print_args(argv); */
-    /* print_args(envp); */
     if (argc == 5)
     {
-        printf("First file: %s\n", argv[1]);
-        printf("run in: %s\n", argv[2]);
-        printf("then Piped to: %s\n", argv[3]);
-        printf("and the results saved in: %s\n", argv[4]);
         /* in = open(argv[1], O_RDONLY); */
         /* out = open(argv[4], O_CREAT); */
         // FIXME This malloc does not get freed.Because cmd1 is altered in find_command?
@@ -114,13 +132,13 @@ int	main(int argc, char *argv[], char *envp[])
         /* path = find_path(envp); */
         /* ft_printf("\nFound path: %s", path); */
         /* ft_printf("\nSeeking cmd..."); */
-        prog = find_command(argv[2], envp);
-        child = fork();
+        if (pipe(mario) == -1)
+            exit(EXIT_FAILURE);
+        child = fork();	// FIXME If I dont arrange for this to end, does it run forever?
         if (child == -1)
             exit(EXIT_FAILURE);
-        execve(prog, argv, envp);	// HACK I think the argv should be its own thing, have to make that?
-        waitpid(child, NULL, 0);	// NOTE No need for compicated options, I guess.
-    free (prog);
+        run_command(argv[2], envp);
+//        waitpid(child, NULL, 0);	// NOTE No need for complicated options, I guess.
     }
     return(0);
 }
