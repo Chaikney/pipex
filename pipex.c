@@ -27,17 +27,17 @@ void	print_args(char **arg)
     }
 }
 
-// Go through PATH entries and see if cmd is locatable.
-// - add a leading / to cmd
-// - split the pieces of PATH so they can be checked
+// Locate PATH and go through entries for cmd is locatable.
+// cmd must be the name only, not any of its arguments.
+// - Find the PATH= line in env (this could be split out)
+// - split the pieces of PATH and add a trailing slash.
 // - (this also requires the first 5 chars of the line to be removed.)
 // - test the parts of path:
 // -- does path + cmd = an executable?
 // -- if YES we have our command: keep that and discard the rest.
 // FIXME Free one last part from ft_split. What? secondary pointer.
-// TODO Should this return a fully-qualified path to use?
+// TODO This should return a fully-qualified path for execve to use.
 // FIXME Invalid frees. This is a mess!
-// TODO Must split to get any parameters that may be part of the command
 // FIXME Segfaults if it cannot find the command
 char	*find_command(char *cmd, char **envp)
 {
@@ -68,7 +68,7 @@ char	*find_command(char *cmd, char **envp)
 //        free (*pathparts);
 		pathparts++;
 	}
-//    ft_printf("\nI choose: %s", candidate);
+    ft_printf("\nI choose: %s", candidate);
     while (*pathparts != NULL)
     {
 //        ft_printf("\tThen freeing %s\n", *pathparts);
@@ -86,6 +86,7 @@ char	*find_command(char *cmd, char **envp)
 // -- We get an array with the cmd as first thing (same as when argv is read in a program)
 // - find cmd in PATH
 // - send it off to execve
+// NOTE This on its own has no idea of what input / output it should use.
 void	run_command(char *cmd, char **envp)
 {
 	char	*prog;
@@ -115,9 +116,8 @@ void	run_command(char *cmd, char **envp)
 // - Create a child process
 // - run cmd1, wait for it to return
 // - run cmd2
-// TODO Call execve with located cmd
-// TODO fork and dup a process
-// TODO Stick two pieces together
+// TODO fork and setup processes for the two programs
+// TODO Stick two pieces together, ie dup2 fds to the right places
 int	main(int argc, char *argv[], char *envp[])
 {
      int	mario[2];
