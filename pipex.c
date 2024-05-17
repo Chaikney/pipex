@@ -68,7 +68,7 @@ char	*find_command(char *cmd, char **envp)
 //        free (*pathparts);
 		pathparts++;
 	}
-    ft_printf("\nI choose: %s", candidate);
+//    ft_printf("\nI choose: %s", candidate);
     while (*pathparts != NULL)
     {
 //        ft_printf("\tThen freeing %s\n", *pathparts);
@@ -96,9 +96,15 @@ void	run_command(char *cmd, char **envp)
     print_args(args);
     prog = find_command(args[0], envp);
     if (!prog)
+    {
+        ft_printf("Could not find prog: %s", prog);
         exit(EXIT_FAILURE);
+    }
     if (execve(prog, args, envp) == -1)
+    {
+        ft_printf("Failed to execute prog: %s", prog);
         exit(EXIT_FAILURE);
+    }
     free (prog);
 }
 
@@ -111,6 +117,7 @@ void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
     close(tube[0]);
 	dup2(in_file, STDIN_FILENO);
 	dup2(tube[1], STDOUT_FILENO);
+    close(tube[1]);	// not needed any more?
 	run_command(argv[2], envp);
 }
 
@@ -124,6 +131,7 @@ void	i_am_the_parent(char **argv, char **envp, int *tube, int out_file)
     close(tube[1]);
 	dup2(tube[0], STDIN_FILENO);
 	dup2(out_file, STDOUT_FILENO);
+    close(tube[0]);	// Not needed any more?
 	run_command(argv[3], envp);
 }
 
@@ -141,11 +149,12 @@ void	i_am_the_parent(char **argv, char **envp, int *tube, int out_file)
 // - Create a child process
 // - run cmd1, wait for it to return
 // - run cmd2
-// TODO fork and setup processes for the two programs
-// TODO Stick two pieces together, ie dup2 fds to the right places
-// TODO Should have some sensiblle limits on the file names- What could cause bother?
-// TODO Fix options for out_file: write, append permissions included?
-// FIXME Output file is not readable.
+// DONE fork and setup processes for the two programs
+// DONE Stick two pieces together, ie dup2 fds to the right places
+// TODO Should have some sensible limits on the file names- What could cause bother?
+// DONE Fix options for out_file: write, append permissions included?
+// FIXED Output file is not readable.
+// FIXED Output file is blank. It is not getting written to.
 int	main(int argc, char *argv[], char *envp[])
 {
 	 int	mario[2];
@@ -156,17 +165,18 @@ int	main(int argc, char *argv[], char *envp[])
 	if (argc == 5)
 	{
 		in_file = open(argv[1], O_RDONLY);
-		out_file = open(argv[4], O_CREAT);
-		if ((pipe(mario) == -1) || (in_file = -1) || (out_file = -1))
+		if ((pipe(mario) == -1) || (in_file == -1))
 			exit(EXIT_FAILURE);
-		child = fork();	// FIXME If I dont arrange for this to end, does it run forever?
+		child = fork();
 		if (child == -1)
 			exit(EXIT_FAILURE);
 		if (child == 0)
 			i_am_the_child(argv, envp, mario, in_file);
-		else
-			i_am_the_parent(argv, envp, mario, out_file);
-		waitpid(child, NULL, 0);	// NOTE No need for complicated options, I guess.
+		waitpid(child, NULL, 0);
+		out_file = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		if (out_file == -1)
+			exit(EXIT_FAILURE);
+        i_am_the_parent(argv, envp, mario, out_file);
 		close(out_file);
 	}
 	return(0);
