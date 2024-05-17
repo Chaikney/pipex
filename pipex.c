@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// FIXME Too many functions in this file.
+
 // print the lines given, like in an argv array.
 // TODO Remove before submission, for debugging only.
 void	print_args(char **arg)
@@ -39,6 +41,7 @@ void	print_args(char **arg)
 // TODO This should return a fully-qualified path for execve to use.
 // FIXME Invalid frees. This is a mess!
 // FIXME Segfaults if it cannot find the command
+// FIXME Function is too long (prob OK without printfs)
 char	*find_command(char *cmd, char **envp)
 {
 	char	**pathparts;
@@ -48,7 +51,7 @@ char	*find_command(char *cmd, char **envp)
 	while (*envp != NULL)
 	{
 		if (ft_strncmp(*envp, "PATH=", 5) == 0)
-			break;
+			break ;
 		envp++;
 	}
 //    ft_printf("reading from: %s", *envp +5);
@@ -63,7 +66,7 @@ char	*find_command(char *cmd, char **envp)
 		if (access(candidate, X_OK) == 0)
 			break ;
 //        ft_printf("\tNo. freeing %s", candidate);
- //       free (candidate);
+//       free (candidate);
 //        ft_printf("\tThen freeing residue %s", *pathparts);
 //        free (*pathparts);
 		pathparts++;
@@ -72,7 +75,7 @@ char	*find_command(char *cmd, char **envp)
 	while (*pathparts != NULL)
 	{
 //        ft_printf("\tThen freeing %s\n", *pathparts);
- //       free (*pathparts);
+//       free (*pathparts);
 		pathparts++;
 	}
 //    free (pathparts);
@@ -83,7 +86,8 @@ char	*find_command(char *cmd, char **envp)
 // Wrap the things that you need to do to make the
 // command run in whatever process.
 // - split any arguments from cmd
-// -- We get an array with the cmd as first thing (same as when argv is read in a program)
+// -- We get an array with the cmd as first thing
+// -- (same as when argv is read in a program)
 // - find cmd in PATH
 // - send it off to execve
 // NOTE This on its own has no idea of what input / output it should use.
@@ -92,7 +96,7 @@ void	run_command(char *cmd, char **envp)
 	char	*prog;
 	char	**args;
 
-	args =  ft_split(cmd, ' ');
+	args = ft_split(cmd, ' ');
 	print_args(args);
 	prog = find_command(args[0], envp);
 	if (!prog)
@@ -117,7 +121,7 @@ void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
 	close(tube[0]);
 	dup2(in_file, STDIN_FILENO);
 	dup2(tube[1], STDOUT_FILENO);
-	close(tube[1]);	// not needed any more?
+	close(tube[1]);
 	run_command(argv[2], envp);
 }
 
@@ -131,7 +135,7 @@ void	i_am_the_parent(char **argv, char **envp, int *tube, int out_file)
 	close(tube[1]);
 	dup2(tube[0], STDIN_FILENO);
 	dup2(out_file, STDOUT_FILENO);
-	close(tube[0]);	// Not needed any more?
+	close(tube[0]);
 	run_command(argv[3], envp);
 }
 
@@ -149,18 +153,14 @@ void	i_am_the_parent(char **argv, char **envp, int *tube, int out_file)
 // - Create a child process
 // - run cmd1, wait for it to return
 // - run cmd2
-// DONE fork and setup processes for the two programs
-// DONE Stick two pieces together, ie dup2 fds to the right places
-// TODO Should have some sensible limits on the file names- What could cause bother?
-// DONE Fix options for out_file: write, append permissions included?
-// FIXED Output file is not readable.
-// FIXED Output file is blank. It is not getting written to.
+// TODO Should have some sensible limits on the file names-
+// ....What could cause bother?
 int	main(int argc, char *argv[], char *envp[])
 {
-	 int	mario[2];
-	 pid_t	child;
-	 int	in_file;
-	 int	out_file;
+	int	mario[2];
+	int	in_file;
+	int	out_file;
+	pid_t	child;
 
 	if (argc == 5)
 	{
@@ -179,5 +179,5 @@ int	main(int argc, char *argv[], char *envp[])
 		i_am_the_parent(argv, envp, mario, out_file);
 		close(out_file);
 	}
-	return(0);
+	return (0);
 }

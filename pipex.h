@@ -18,6 +18,6 @@
 # include <fcntl.h>	// open
 # include <unistd.h>	// access, pipe
 # include "libft/libft.h"
-#include <sys/wait.h>	// waitpid
+# include <sys/wait.h>	// waitpid
 
 #endif
