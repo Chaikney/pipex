@@ -102,33 +102,31 @@ void	run_command(char *cmd, char **envp)
     free (prog);
 }
 
-// The child process has to run cmd1 using file1 and the start of our pipe
-// Compare with i_am_the_parent...
-// replace STDIN with our input file
-// replae STDOUT with the  start of our pipe.
-// Close the other end of the pipe.
-// dup2: old_fd, new_fd - the first one takes the value of the second
-// It is a *copy* not a replacement.
-// FIXME Compare values with am_parent
+// The child process has to run cmd1 using file1 and our pipe
+// We read our input from in_file (i.e. file1)
+// We *write* our output (STDOUT) to the pipe[1].
+// We do not need to read from the pipe, so we close it.
 void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
 {
-	dup2(STDIN_FILENO, in_file);
-	dup2(STDOUT_FILENO, tube[0]);
-    close(tube[1]);
+    close(tube[0]);
+	dup2(in_file, STDIN_FILENO);
+	dup2(tube[1], STDOUT_FILENO);
 	run_command(argv[2], envp);
 }
 
 // The parent process runs cmd2 (argv[3])
 // using for its input (STDIN) the output of child process (mario[1])
-// FIXME Compare values with am_child
-// TODO Diagram this and fix the in-out pieces
-void	i_am_the_parent(char **argv, char **envp, int *tube, int in_file)
+// Does not need to write to the pipe, so close it immediately.
+// We read our input from the read end of the pipe[0]
+// We send our output to out_file (file2).
+void	i_am_the_parent(char **argv, char **envp, int *tube, int out_file)
 {
-	dup2(STDIN_FILENO, in_file);
-	dup2(STDOUT_FILENO, tube[0]);
     close(tube[1]);
+	dup2(tube[0], STDIN_FILENO);
+	dup2(out_file, STDOUT_FILENO);
 	run_command(argv[3], envp);
 }
+
 // Read arguments
 // Check that they are valid:
 // - file1 exists and is readable
@@ -147,6 +145,7 @@ void	i_am_the_parent(char **argv, char **envp, int *tube, int in_file)
 // TODO Stick two pieces together, ie dup2 fds to the right places
 // TODO Should have some sensiblle limits on the file names- What could cause bother?
 // TODO Fix options for out_file: write, append permissions included?
+// FIXME Output file is not readable.
 int	main(int argc, char *argv[], char *envp[])
 {
 	 int	mario[2];
@@ -167,8 +166,8 @@ int	main(int argc, char *argv[], char *envp[])
 			i_am_the_child(argv, envp, mario, in_file);
 		else
 			i_am_the_parent(argv, envp, mario, out_file);
-		run_command(argv[2], envp);
-//        waitpid(child, NULL, 0);	// NOTE No need for complicated options, I guess.
+		waitpid(child, NULL, 0);	// NOTE No need for complicated options, I guess.
+		close(out_file);
 	}
 	return(0);
 }

@@ -98,34 +98,7 @@ There is _Exit() or _exit() which terminate the calling process "immediately". T
 *** man 3 exit
 #+begin_src c
     #include stdlib.h
-    void exit (int status);
-#+end_src
-Causes normal process termination and "the least significant byte of status is returned to the parent".
-I have used this already and EXIT_SUCCESS and EXIT_FAILURE are standard so I can use them, probably useful here.
-** strerror
-returns a pointer to a string describing an errorcode. Use with perror, requires string.h
-src_c{char *strerror(int errnum);}
-** perror
-Print system error message -- looks useful for tidier crashes.      src_c{void perror(const char *s);}
-** unlink
-delete a name and possibly the file it refers to. (man 2 unlink) If its the last link to it, it goes provided there are no processes with it open.
-Another one that I need to know what the pieces of the puzzle are,
-* Structure and task breakdown
-** KILL open link to stdin and stdout
-Thiis is not the way to think about this. tddin and out are already there. What we do is copy them to parts of the pipe we create.
-** read parameters and find the commands
-Use access to make sure that we can do things with them (X_OK?)
-"is this a file / is this a command"
-- cmd1 and 2 must be searched for in the PATH.
-*** Must differentiate between cmd and its arguments!
-the arguments become its argv when passed to execve
-split on white space
-*** search in PATH
-- should be available in envp.
-- Multiple lines, we want the one starting PATH=
-- The different options are :-separated.
-  - They also lack the trailing / !
-- join cmd to a PATH part and see if we get X_OK
+    void exit (inte get X_OK
 ** open files
 Fairly simple operations, use open to get the fd for the file. Careful with the options.
 *** 1 for reading
@@ -156,6 +129,13 @@ The parts of this are:
 - make sure we have the command name separate from its args
 - find the full path for the command
 - send it to execve along with the environment (envp)
+** Closing parts of pipes
+If not, you end up unable to finish the program, as things are still being held for writing.
+https://stackoverflow.com/questions/33884291/pipes-dup2-and-exec
+In our forked model, close the end of the pipe that you are not going to use. -- mind you created new copies of these both when you forked, therefore they need to be cleaned up. Leave only the process-fd combination that is needed to achieve the transfer.
+https://web.stanford.edu/class/archive/cs/cs110/cs110.1204/static/lectures/min/cs110-lecture06-min.html
+Might be worth thinkning of the 2 pipe ends as READ and WRITE. ("you learn to read before you can write" is a mnemonic for this apparently.)
+"both processes could read or write to the pipe if they wanted."
 * Notes on envp
 This is a third argument to main, widely used in unix systems, it gives access to the environment variables. Otherwise you would use getenv or something.
 src_c{int	main(int argc, char *argv[], char *envp[])}
@@ -181,6 +161,7 @@ Apparently fork-then-exec is the way that unix has *always* run a new program.
 ** What is envp and how is it accessed.
 ** function sigs for all in man pages bullet
 ** pipe fd array, which end is which
+** when you fork what is the childs return
 * presubmission checklist
 - [ ] remove stdio.h from my files
 - [ ] remove spare (ft_)printfs
