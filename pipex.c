@@ -103,13 +103,32 @@ void	run_command(char *cmd, char **envp)
 }
 
 // The child process has to run cmd1 using file1 and the start of our pipe
+// Compare with i_am_the_parent...
+// replace STDIN with our input file
+// replae STDOUT with the  start of our pipe.
+// Close the other end of the pipe.
+// dup2: old_fd, new_fd - the first one takes the value of the second
+// It is a *copy* not a replacement.
+// FIXME Compare values with am_parent
 void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
 {
 	dup2(STDIN_FILENO, in_file);
 	dup2(STDOUT_FILENO, tube[0]);
+    close(tube[1]);
 	run_command(argv[2], envp);
 }
 
+// The parent process runs cmd2 (argv[3])
+// using for its input (STDIN) the output of child process (mario[1])
+// FIXME Compare values with am_child
+// TODO Diagram this and fix the in-out pieces
+void	i_am_the_parent(char **argv, char **envp, int *tube, int in_file)
+{
+	dup2(STDIN_FILENO, in_file);
+	dup2(STDOUT_FILENO, tube[0]);
+    close(tube[1]);
+	run_command(argv[3], envp);
+}
 // Read arguments
 // Check that they are valid:
 // - file1 exists and is readable
@@ -127,24 +146,27 @@ void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
 // TODO fork and setup processes for the two programs
 // TODO Stick two pieces together, ie dup2 fds to the right places
 // TODO Should have some sensiblle limits on the file names- What could cause bother?
+// TODO Fix options for out_file: write, append permissions included?
 int	main(int argc, char *argv[], char *envp[])
 {
 	 int	mario[2];
 	 pid_t	child;
 	 int	in_file;
-//	 int	out_file;
+	 int	out_file;
 
 	if (argc == 5)
 	{
 		in_file = open(argv[1], O_RDONLY);
-		/* out_file = open(argv[4], O_CREAT); */
-		if ((pipe(mario) == -1) || (in_file = -1))
+		out_file = open(argv[4], O_CREAT);
+		if ((pipe(mario) == -1) || (in_file = -1) || (out_file = -1))
 			exit(EXIT_FAILURE);
 		child = fork();	// FIXME If I dont arrange for this to end, does it run forever?
 		if (child == -1)
 			exit(EXIT_FAILURE);
 		if (child == 0)
 			i_am_the_child(argv, envp, mario, in_file);
+		else
+			i_am_the_parent(argv, envp, mario, out_file);
 		run_command(argv[2], envp);
 //        waitpid(child, NULL, 0);	// NOTE No need for complicated options, I guess.
 	}

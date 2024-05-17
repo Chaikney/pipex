@@ -110,8 +110,9 @@ Print system error message -- looks useful for tidier crashes.      src_c{void p
 ** unlink
 delete a name and possibly the file it refers to. (man 2 unlink) If its the last link to it, it goes provided there are no processes with it open.
 Another one that I need to know what the pieces of the puzzle are,
-* Possible task breakdown
-** open link to stdin and stdout
+* Structure and task breakdown
+** KILL open link to stdin and stdout
+Thiis is not the way to think about this. tddin and out are already there. What we do is copy them to parts of the pipe we create.
 ** read parameters and find the commands
 Use access to make sure that we can do things with them (X_OK?)
 "is this a file / is this a command"
@@ -125,11 +126,22 @@ split on white space
 - The different options are :-separated.
   - They also lack the trailing / !
 - join cmd to a PATH part and see if we get X_OK
+** open files
+Fairly simple operations, use open to get the fd for the file. Careful with the options.
+*** 1 for reading
+src_c{in_file = open(argv[1], O_RDONLY);}
+
+*** 2 for writing
+this one especially there are more possiblities. WRITE? APPEND?
+src_c{out_file = open(argv[4], O_CREAT);}
 ** launch a new command
 *** fork...
-Make a child process, run the command.
-But we need a check to make sure that we do the write thing based on are we the parent or child.
-When we fork, briefly there are 2 copies of the program running! One has PID 0, the other has the new PID.
+Make a child process to run the first command.
+But we need a check to make sure that we do the right thing based on are we the parent or child.
+When we fork, briefly there are 2 copies of the program running! One has PID 0, the other has the new PID. The fd that they have open are the same:
+#+begin_quote
+The child inherits copies of the parent's set of open file descriptors.  Each file descriptor in the child refers to the same open file description (see open(2)) as the  corresponding  file  descriptor  in  the parent.  This means that the two file descriptors share open file status flags, file offset, and signal-driven I/O attributes (see  the  description  of F_SETOWN and F_SETSIG in fcntl(2)).
+#+end_quote
 *** ...set up the pipes
 First program run: child process: file1 is STDIN.
 Second program run: parent process (waits for child to finish / return with data): file2 is its STDOUT.
@@ -137,13 +149,13 @@ What then happens in between?
 We have the 2 fds: mario[0], the start of the pipe and mario[1], the end of the pipe.
 mario[0] has to take over the STDOUT of the *child* process (first one).
 mario[1] has to take over the STDIN of the *parent* (second) process.
+NO! The STDOUT must *become* the fd at the start of the pipe.
+What do we do  with the fds created? Where are they with the two processes -- do they start identical and here I am changing them? What then happens when one process closes one of the mario fds? Are they closed in both? Must be, because this is them *sharing* the space and processes, no?
 *** ...and exec
 The parts of this are:
 - make sure we have the command name separate from its args
 - find the full path for the command
 - send it to execve along with the environment (envp)
-** open file 1 for reading
-** open file 2 for writing
 * Notes on envp
 This is a third argument to main, widely used in unix systems, it gives access to the environment variables. Otherwise you would use getenv or something.
 src_c{int	main(int argc, char *argv[], char *envp[])}
