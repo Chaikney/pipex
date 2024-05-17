@@ -102,6 +102,14 @@ void	run_command(char *cmd, char **envp)
     free (prog);
 }
 
+// The child process has to run cmd1 using file1 and the start of our pipe
+void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
+{
+	dup2(STDIN_FILENO, in_file);
+	dup2(STDOUT_FILENO, tube[0]);
+	run_command(argv[2], envp);
+}
+
 // Read arguments
 // Check that they are valid:
 // - file1 exists and is readable
@@ -118,27 +126,27 @@ void	run_command(char *cmd, char **envp)
 // - run cmd2
 // TODO fork and setup processes for the two programs
 // TODO Stick two pieces together, ie dup2 fds to the right places
+// TODO Should have some sensiblle limits on the file names- What could cause bother?
 int	main(int argc, char *argv[], char *envp[])
 {
-     int	mario[2];
-     pid_t	child;
+	 int	mario[2];
+	 pid_t	child;
+	 int	in_file;
+//	 int	out_file;
 
-    if (argc == 5)
-    {
-        /* in = open(argv[1], O_RDONLY); */
-        /* out = open(argv[4], O_CREAT); */
-        // FIXME This malloc does not get freed.Because cmd1 is altered in find_command?
-        /* cmd1 = ft_strjoin("/", argv[2]); */
-        /* path = find_path(envp); */
-        /* ft_printf("\nFound path: %s", path); */
-        /* ft_printf("\nSeeking cmd..."); */
-        if (pipe(mario) == -1)
-            exit(EXIT_FAILURE);
-        child = fork();	// FIXME If I dont arrange for this to end, does it run forever?
-        if (child == -1)
-            exit(EXIT_FAILURE);
-        run_command(argv[2], envp);
+	if (argc == 5)
+	{
+		in_file = open(argv[1], O_RDONLY);
+		/* out_file = open(argv[4], O_CREAT); */
+		if ((pipe(mario) == -1) || (in_file = -1))
+			exit(EXIT_FAILURE);
+		child = fork();	// FIXME If I dont arrange for this to end, does it run forever?
+		if (child == -1)
+			exit(EXIT_FAILURE);
+		if (child == 0)
+			i_am_the_child(argv, envp, mario, in_file);
+		run_command(argv[2], envp);
 //        waitpid(child, NULL, 0);	// NOTE No need for complicated options, I guess.
-    }
-    return(0);
+	}
+	return(0);
 }
