@@ -22,6 +22,59 @@ This is the "heredoc" case which I understand much less.
 #+begin_quote
 read input from the current source until a line containing only word (with no trailing blanks) is seen. All of the lines read up to that point are then used as the standard input (or file descriptor n if n is specified) for a command.
 #+end_quote
+* Structure and task breakdown
+** KILL open link to stdin and stdout
+Thiis is not the way to think about this. tddin and out are already there. What we do is copy them to parts of the pipe we create.
+** read parameters and find the commands
+Use access to make sure that we can do things with them (X_OK?)
+"is this a file / is this a command"
+- cmd1 and 2 must be searched for in the PATH.
+*** Must differentiate between cmd and its arguments!
+the arguments become its argv when passed to execve
+split on white space
+*** search in PATH
+- should be available in envp.
+- Multiple lines, we want the one starting PATH=
+- The different options are :-separated.
+  - They also lack the trailing / !
+- join cmd to a PATH part and see if we get X_OK
+** open files
+Fairly simple operations, use open to get the fd for the file. Careful with the options.
+*** 1 for reading
+src_c{in_file = open(argv[1], O_RDONLY);}
+
+*** 2 for writing
+this one especially there are more possiblities. WRITE? APPEND?
+src_c{out_file = open(argv[4], O_CREAT);}
+2 ttypes of flags - ones that affect the creation and ones that affect the way it behaves in existence.
+When you create you can also set the file MODE (770 etc). By default the file is owened by the running program, so when that finishes, the file is ownerless. If you dont set the perms to allow others to access (i.e. mode 770) you  get nothing, I think because the program is unable to reset the owneership on closing everything.
+** actually *using* the files
+*** for reading
+I think it works only with a matter of direceting the pipes.
+*** for writing
+At the moment it does *not* work. Hopefully because I mis-ordered the waitpid command...
+** launch a new command
+*** fork...
+Make a child process to run the first command.
+But we need a check to make sure that we do the right thing based on are we the parent or child.
+When we fork, briefly there are 2 copies of the program running! One has PID 0, the other has the new PID. The fd that they have open are the same:
+#+begin_quote
+The child inherits copies of the parent's set of open file descriptors.  Each file descriptor in the child refers to the same open file description (see open(2)) as the  corresponding  file  descriptor  in  the parent.  This means that the two file descriptors share open file status flags, file offset, and signal-driven I/O attributes (see  the  description  of F_SETOWN and F_SETSIG in fcntl(2)).
+#+end_quote
+*** ...set up the pipes
+First program run: child process: file1 is STDIN.
+Second program run: parent process (waits for child to finish / return with data): file2 is its STDOUT.
+What then happens in between?
+We have the 2 fds: mario[0], the start of the pipe and mario[1], the end of the pipe.
+mario[0] has to take over the STDOUT of the *child* process (first one).
+mario[1] has to take over the STDIN of the *parent* (second) process.
+NO! The STDOUT must *become* the fd at the start of the pipe.
+What do we do  with the fds created? Where are they with the two processes -- do they start identical and here I am changing them? What then happens when one process closes one of the mario fds? Are they closed in both? Must be, because this is them *sharing* the space and processes, no?
+*** ...and exec
+The parts of this are:
+- make sure we have the command name separate from its args
+- find the full path for the command
+- send it to execve along with the environment (envp)
 * manpages (or equivalent) to read for this
 ** [?] pipe
 I assume pipe2 (with the flags) is off limits.
@@ -87,6 +140,7 @@ By  default, file descriptors remain open across an execve().  File descriptors 
 ** wait & waitpid
   src_c{#include <sys/wait.h>}
   src_c{pid_t waitpid(pid_t pid, int *wstatus, int options);}
+  	No need for complicated options in our case, I guess.
 So similar to wait that they share man pages (man 2 wait).
 Wait for state changes in a child of the calling process:
 *** terminated
