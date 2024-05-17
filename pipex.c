@@ -20,11 +20,11 @@
 // TODO Remove before submission, for debugging only.
 void	print_args(char **arg)
 {
-    while (*arg != NULL)
-    {
-        printf("%s\n", *arg);
-        arg++;
-    }
+	while (*arg != NULL)
+	{
+		printf("%s\n", *arg);
+		arg++;
+	}
 }
 
 // Locate PATH and go through entries for cmd is locatable.
@@ -43,25 +43,25 @@ char	*find_command(char *cmd, char **envp)
 {
 	char	**pathparts;
 	char	*candidate;
-    char	*slashed;
+	char	*slashed;
 
-    while (*envp != NULL)
-    {
-        if (ft_strncmp(*envp, "PATH=", 5) == 0)
-            break;
-        envp++;
-    }
+	while (*envp != NULL)
+	{
+		if (ft_strncmp(*envp, "PATH=", 5) == 0)
+			break;
+		envp++;
+	}
 //    ft_printf("reading from: %s", *envp +5);
- 	pathparts = ft_split(*envp + 5, ':');
+	pathparts = ft_split(*envp + 5, ':');
 	while (*pathparts != NULL)
 	{
 		slashed = ft_strjoin(*pathparts, "/");
 //		ft_printf("\ntesting %s", slashed);
-        candidate = ft_strjoin(slashed, cmd);
+		candidate = ft_strjoin(slashed, cmd);
 //        free (slashed);
 //        ft_printf("\t that equates to: %s", candidate);
 		if (access(candidate, X_OK) == 0)
-            break ;
+			break ;
 //        ft_printf("\tNo. freeing %s", candidate);
  //       free (candidate);
 //        ft_printf("\tThen freeing residue %s", *pathparts);
@@ -69,15 +69,15 @@ char	*find_command(char *cmd, char **envp)
 		pathparts++;
 	}
 //    ft_printf("\nI choose: %s", candidate);
-    while (*pathparts != NULL)
-    {
+	while (*pathparts != NULL)
+	{
 //        ft_printf("\tThen freeing %s\n", *pathparts);
  //       free (*pathparts);
-        pathparts++;
-    }
+		pathparts++;
+	}
 //    free (pathparts);
 //    free(candidate);
-    return (candidate);
+	return (candidate);
 }
 
 // Wrap the things that you need to do to make the
@@ -90,22 +90,22 @@ char	*find_command(char *cmd, char **envp)
 void	run_command(char *cmd, char **envp)
 {
 	char	*prog;
-    char	**args;
+	char	**args;
 
-    args =  ft_split(cmd, ' ');
-    print_args(args);
-    prog = find_command(args[0], envp);
-    if (!prog)
-    {
-        ft_printf("Could not find prog: %s", prog);
-        exit(EXIT_FAILURE);
-    }
-    if (execve(prog, args, envp) == -1)
-    {
-        ft_printf("Failed to execute prog: %s", prog);
-        exit(EXIT_FAILURE);
-    }
-    free (prog);
+	args =  ft_split(cmd, ' ');
+	print_args(args);
+	prog = find_command(args[0], envp);
+	if (!prog)
+	{
+		ft_printf("Could not find prog: %s", prog);
+		exit(EXIT_FAILURE);
+	}
+	if (execve(prog, args, envp) == -1)
+	{
+		ft_printf("Failed to execute prog: %s", prog);
+		exit(EXIT_FAILURE);
+	}
+	free (prog);
 }
 
 // The child process has to run cmd1 using file1 and our pipe
@@ -114,10 +114,10 @@ void	run_command(char *cmd, char **envp)
 // We do not need to read from the pipe, so we close it.
 void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
 {
-    close(tube[0]);
+	close(tube[0]);
 	dup2(in_file, STDIN_FILENO);
 	dup2(tube[1], STDOUT_FILENO);
-    close(tube[1]);	// not needed any more?
+	close(tube[1]);	// not needed any more?
 	run_command(argv[2], envp);
 }
 
@@ -128,10 +128,10 @@ void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
 // We send our output to out_file (file2).
 void	i_am_the_parent(char **argv, char **envp, int *tube, int out_file)
 {
-    close(tube[1]);
+	close(tube[1]);
 	dup2(tube[0], STDIN_FILENO);
 	dup2(out_file, STDOUT_FILENO);
-    close(tube[0]);	// Not needed any more?
+	close(tube[0]);	// Not needed any more?
 	run_command(argv[3], envp);
 }
 
@@ -176,7 +176,7 @@ int	main(int argc, char *argv[], char *envp[])
 		out_file = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 		if (out_file == -1)
 			exit(EXIT_FAILURE);
-        i_am_the_parent(argv, envp, mario, out_file);
+		i_am_the_parent(argv, envp, mario, out_file);
 		close(out_file);
 	}
 	return(0);
