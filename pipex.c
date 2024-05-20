@@ -91,6 +91,7 @@ char	*find_command(char *cmd, char **envp)
 // - find cmd in PATH
 // - send it off to execve
 // NOTE This on its own has no idea of what input / output it should use.
+// FIXME If this receives a non-command, it shoulld free mem before exiting.
 void	run_command(char *cmd, char **envp)
 {
 	char	*prog;
@@ -155,6 +156,8 @@ void	i_am_the_parent(char **argv, char **envp, int *tube, int out_file)
 // - run cmd2
 // TODO Should have some sensible limits on the file names-
 // ....What could cause bother?
+// FIXME There are memleaks if the 1st command is bad
+// ...what needs to be freed? / passed to thing? No malloc here but in the split.
 int	main(int argc, char *argv[], char *envp[])
 {
 	int	mario[2];
@@ -162,7 +165,7 @@ int	main(int argc, char *argv[], char *envp[])
 	int	out_file;
 	pid_t	child;
 
-	if (argc == 5)
+	if (argc >= 5)
 	{
 		in_file = open(argv[1], O_RDONLY);
 		if ((pipe(mario) == -1) || (in_file == -1))
@@ -173,7 +176,7 @@ int	main(int argc, char *argv[], char *envp[])
 		if (child == 0)
 			i_am_the_child(argv, envp, mario, in_file);
 		waitpid(child, NULL, 0);
-		out_file = open(argv[4], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		out_file = open(argv[argc-1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 		if (out_file == -1)
 			exit(EXIT_FAILURE);
 		i_am_the_parent(argv, envp, mario, out_file);

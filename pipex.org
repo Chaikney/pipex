@@ -9,9 +9,17 @@ So first question is what exactly is that behaviour?
 And what is its error handling like?
 * Bonus requirements
 Bonuses for:
-- multiple pipes
-  Sounds like a design / extendibility thing.
-- << and >> "when the first parameter is "here_doc""
+** multiple pipes
+  Sounds like a design / extendability thing.
+  Would have to cope with more parameters - every one more (than the starting 5) would be one more command.
+  out_file would be argv[argc-1]
+  in_file remains the same
+  everything in-between is a command.
+  Count the number of commands, or recurse down?
+  For each command we need a child process, which we would wait for. Must have to loop, somehow, over these pipes? How would you count your pipes when you are creating copies of yourself? Impossible.
+  Also you would have to connect the out of each command to the in of the next (not the out_file?) -- this could be handled with the existing function structure?
+  Do you need a *new* pipe with read and write, or can you read and write the one existing one?
+** << and >> "when the first parameter is "here_doc""
   What does << and >> do, then?
   The double means "create file or append to it if it already exists". The concept is often called heredocs, fish dismisses it as a special case of pipes but bash and zsh have them.
   https://www.gnu.org/software/bash/manual/html_node/Redirections.html
