@@ -26,8 +26,8 @@
 // -- if YES we have our command: keep that and discard the rest.
 // FIXME Free one last part from ft_split. What? secondary pointer.
 // TODO This should return a fully-qualified path for execve to use.
-// FIXME Invalid frees. This is a mess!
-// FIXME Segfaults if it cannot find the command
+// TODO If nothing is found, return NULL and clear up pathparts
+// TODO Clarify whether I need to free things that are ft_strjoined
 char	*find_command(char *cmd, char **envp)
 {
 	char	**pathparts;
@@ -48,11 +48,12 @@ char	*find_command(char *cmd, char **envp)
 		if (access(candidate, X_OK) == 0)
 			break ;
 		pathparts++;
+		free (candidate);
+		free(slashed);
 	}
+	// TODO Should this free? It does nothing right now....
 	while (*pathparts != NULL)
-	{
 		pathparts++;
-	}
 	return (candidate);
 }
 
@@ -72,6 +73,7 @@ void	exit_and_free(char **args)
 	free(args);
 }
 
+
 // Wrap the things that you need to do to make the
 // command run in whatever process.
 // - split any arguments from cmd
@@ -81,14 +83,14 @@ void	exit_and_free(char **args)
 // - send it off to execve
 // NOTE This on its own has no idea of what input / output it should use.
 // FIXME If this receives a non-command, it should free mem before exiting.
-// FIXME Not sure if the !prog gets triggered
+// FIXME !prog does not get triggered even if find_command gives nothing useful back
+// TODO Probably need to free args on the way out, especially if fails.s
 void	run_command(char *cmd, char **envp)
 {
 	char	*prog;
 	char	**args;
 
 	args = ft_split(cmd, ' ');
-	print_args(args);
 	prog = find_command(args[0], envp);
 	if (!prog)
 	{
@@ -180,6 +182,7 @@ int	main(int argc, char *argv[], char *envp[])
 		}
 		dup2(out_file, STDOUT_FILENO);
 		run_command(argv[(argc - 2)], envp);
+		close(out_file);
 	}
 	else
 		ft_printf("Parameters:\nInput and output files, commands inbetween");

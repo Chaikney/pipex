@@ -230,6 +230,8 @@ Apparently fork-then-exec is the way that unix has *always* run a new program.
 ** function sigs for all in man pages bullet
 ** pipe fd array, which end is which
 ** when you fork what is the childs return
+** calling valgrind for child processes
+valgrind trace-children=yes
 * presubmission checklist
 - [ ] remove stdio.h from my files
 - [ ] remove spare (ft_)printfs
