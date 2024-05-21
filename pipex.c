@@ -117,7 +117,6 @@ void	run_command(char *cmd, char **envp)
 	args = ft_split(cmd, ' ');
 	print_args(args);
 	prog = find_command(args[0], envp);
-	ft_printf("Looked for: %s", prog);
 	if (!prog)
 	{
 		ft_printf("Could not find prog: %s", prog);
@@ -140,13 +139,46 @@ void	run_command(char *cmd, char **envp)
 // We *write* our output (STDOUT) to the pipe[1].
 // We do not need to read from the pipe, so we close it.
 // TODO How does this change when we have child-of-child processes?
+// FIXME May be obsolete in the new multi-pipe setup.
 void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
 {
 	close(tube[0]);
-	dup2(in_file, STDIN_FILENO);
+	dup2(in_file, STDIN_FILENO);	// TODO is this still needed? It happened in main now
 	dup2(tube[1], STDOUT_FILENO);
 	close(tube[1]);
 	run_command(argv[2], envp);
+}
+
+// Make a child process to execute the commnand:
+// - fork
+// - run command
+// - wait for it to come back
+// TODO ...where does our pipe come from, create here I suppose.
+// TODO Define variables for this function.
+// TODO What needs to be closed?
+// NOTE child == 0 means we are in the child process!
+void	make_child(char *cmd, char **envp)
+{
+	pid_t	child;
+	int		tube[2];
+
+	child = fork();
+	if ((child == -1) || (pipe(tube) == -1))
+		exit(EXIT_FAILURE);
+	if (child == 0)
+	{
+		close(tube[0]);
+		dup2(tube[1], STDOUT_FILENO);
+		close(tube[1]);
+		run_command(cmd, envp);
+	}
+	else
+	{
+		// do parent process things. wait and set the read end of the pipe to be STDIN
+		close(tube[1]);
+		waitpid(child, NULL, 0);
+		dup2(tube[0], STDIN_FILENO);
+	}
 }
 
 // The parent process runs cmd2 (argv[3])
@@ -154,14 +186,20 @@ void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
 // Does not need to write to the pipe, so close it immediately.
 // We read our input from the read end of the pipe[0]
 // We send our output to out_file (file2).
-// TODO How does this change when we have a parent process that is itself a child?
-void	i_am_the_parent(char **argv, char **envp, int *tube, int out_file)
+// How does this change when we have a parent process that is itself a child?
+// ...we need to refer to a different command.
+// DONE Change this to work with a single cmd passed in (not argv[3] as assumed final cmd)
+// FIXME May be obsolete in the new multi-pipe setup....
+// TODO Change name? Here this is running the final command
+// TODO This might do too much, are all the closures needed?
+// FIXME has this closed its input too soon?
+void	i_am_the_parent(char *cmd, char **envp, int *tube, int out_file)
 {
 	close(tube[1]);
 	dup2(tube[0], STDIN_FILENO);
 	dup2(out_file, STDOUT_FILENO);
+	run_command(cmd, envp);
 	close(tube[0]);
-	run_command(argv[3], envp);
 }
 
 // Read arguments
@@ -182,30 +220,33 @@ void	i_am_the_parent(char **argv, char **envp, int *tube, int out_file)
 // ....What could cause bother?
 // FIXME There are memleaks if the 1st command is bad
 // ...what needs to be freed? / passed to thing? No malloc here but in the split.
+// TODO Make a better failure / exit routine that closes files, etc.
 int	main(int argc, char *argv[], char *envp[])
 {
 	int	mario[2];
 	int	in_file;
 	int	out_file;
-	pid_t	child;
-	char	*path;
+	int		i;
 
 	if (argc >= 5)
 	{
 		in_file = open(argv[1], O_RDONLY);
-		if ((pipe(mario) == -1) || (in_file == -1))
-			exit(EXIT_FAILURE);
-		child = fork();
-		if (child == -1)
-			exit(EXIT_FAILURE);
-		if (child == 0)
-			i_am_the_child(argv, envp, mario, in_file);
-		waitpid(child, NULL, 0);
 		out_file = open(argv[argc-1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
-		if (out_file == -1)
+		if ((pipe(mario) == -1) || (in_file == -1) || (out_file == -1))
 			exit(EXIT_FAILURE);
-		i_am_the_parent(argv, envp, mario, out_file);
-		close(out_file);
+		// NOTE first process will always have in_file as STDIN
+		dup2(in_file, STDIN_FILENO);
+		// NOTE Here we make a new process for each cmd inbetween file1 and 2 EXCEPT the last
+		i = 2;	// NOTE 0 is progname, 1 is input file, 2 is first command
+		while (i < (argc - 2))
+		{
+			make_child(argv[i], envp);
+			i++;
+		}
+	i_am_the_parent(argv[(argc - 2)], envp, mario, out_file);
+	close(out_file);
 	}
+	else
+		ft_printf("Too few parameters.\nInput and output files with commands inbetween");
 	return (0);
 }
