@@ -139,6 +139,7 @@ void	run_command(char *cmd, char **envp)
 // We read our input from in_file (i.e. file1)
 // We *write* our output (STDOUT) to the pipe[1].
 // We do not need to read from the pipe, so we close it.
+// TODO How does this change when we have child-of-child processes?
 void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
 {
 	close(tube[0]);
@@ -153,6 +154,7 @@ void	i_am_the_child(char **argv, char **envp, int *tube, int in_file)
 // Does not need to write to the pipe, so close it immediately.
 // We read our input from the read end of the pipe[0]
 // We send our output to out_file (file2).
+// TODO How does this change when we have a parent process that is itself a child?
 void	i_am_the_parent(char **argv, char **envp, int *tube, int out_file)
 {
 	close(tube[1]);
@@ -186,6 +188,7 @@ int	main(int argc, char *argv[], char *envp[])
 	int	in_file;
 	int	out_file;
 	pid_t	child;
+	char	*path;
 
 	if (argc >= 5)
 	{

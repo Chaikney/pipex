@@ -19,6 +19,12 @@ Bonuses for:
   For each command we need a child process, which we would wait for. Must have to loop, somehow, over these pipes? How would you count your pipes when you are creating copies of yourself? Impossible.
   Also you would have to connect the out of each command to the in of the next (not the out_file?) -- this could be handled with the existing function structure?
   Do you need a *new* pipe with read and write, or can you read and write the one existing one?
+  ...I think YES new pipe needed. The situation  with X new copies of the program (forks) for each X commands means that the variable names won't matter that they would be the same.
+  https://stackoverflow.com/questions/24742269/is-unix-pipe-limited-to-use-only-between-2-processes
+ #+begin_quote
+  "You can have as many consumers as you want but only one consumer can read the message from the pipe. If both children attempts to read from the pipe, the first one will get the message while the other will get blocked."
+  "a single pipe can be used by children to relay information back to the parent. So long as the messages are properly framed with source information from the child, the parent can field responses from all its children from the read end of the pipe, while each child writes to the write end of the pipe."
+ #+end_quote
 ** << and >> "when the first parameter is "here_doc""
   What does << and >> do, then?
   The double means "create file or append to it if it already exists". The concept is often called heredocs, fish dismisses it as a special case of pipes but bash and zsh have them.
