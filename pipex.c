@@ -83,6 +83,22 @@ char	*find_command(char *cmd, char **envp)
 	return (candidate);
 }
 
+// If we fail to find the command, clear the pathparts before exit.
+// FIXME This doesn't catch anything - does it not get called?
+void	exit_and_free(char **args)
+{
+	int	i;
+
+	ft_printf("Failed to find command; clearing up.");
+	i = 0;
+	while (args[i])
+	{
+		free(args[i]);
+		i++;
+	}
+	free(args);
+}
+
 // Wrap the things that you need to do to make the
 // command run in whatever process.
 // - split any arguments from cmd
@@ -91,7 +107,8 @@ char	*find_command(char *cmd, char **envp)
 // - find cmd in PATH
 // - send it off to execve
 // NOTE This on its own has no idea of what input / output it should use.
-// FIXME If this receives a non-command, it shoulld free mem before exiting.
+// FIXME If this receives a non-command, it should free mem before exiting.
+// FIXME Not sure if the !prog gets triggered
 void	run_command(char *cmd, char **envp)
 {
 	char	*prog;
@@ -100,14 +117,19 @@ void	run_command(char *cmd, char **envp)
 	args = ft_split(cmd, ' ');
 	print_args(args);
 	prog = find_command(args[0], envp);
+	ft_printf("Looked for: %s", prog);
 	if (!prog)
 	{
 		ft_printf("Could not find prog: %s", prog);
+		exit_and_free(args);
+		free(prog);
 		exit(EXIT_FAILURE);
 	}
 	if (execve(prog, args, envp) == -1)
 	{
 		ft_printf("Failed to execute prog: %s", prog);
+		exit_and_free(args);
+		free(prog);
 		exit(EXIT_FAILURE);
 	}
 	free (prog);
