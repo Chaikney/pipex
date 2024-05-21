@@ -169,15 +169,15 @@ void	make_child(char *cmd, char **envp)
 	{
 		close(tube[0]);
 		dup2(tube[1], STDOUT_FILENO);
-		close(tube[1]);
 		run_command(cmd, envp);
+		close(tube[1]);
 	}
 	else
 	{
 		// do parent process things. wait and set the read end of the pipe to be STDIN
 		close(tube[1]);
-		waitpid(child, NULL, 0);
 		dup2(tube[0], STDIN_FILENO);
+		waitpid(child, NULL, 0);
 	}
 }
 
@@ -221,6 +221,7 @@ void	i_am_the_parent(char *cmd, char **envp, int *tube, int out_file)
 // FIXME There are memleaks if the 1st command is bad
 // ...what needs to be freed? / passed to thing? No malloc here but in the split.
 // TODO Make a better failure / exit routine that closes files, etc.
+// FIXME Nothing is getting written to the output file.
 int	main(int argc, char *argv[], char *envp[])
 {
 	int	mario[2];
@@ -230,8 +231,8 @@ int	main(int argc, char *argv[], char *envp[])
 
 	if (argc >= 5)
 	{
-		in_file = open(argv[1], O_RDONLY);
-		out_file = open(argv[argc-1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		in_file = open(argv[1], O_RDONLY, 0777);
+		out_file = open(argv[(argc - 1)], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 		if ((pipe(mario) == -1) || (in_file == -1) || (out_file == -1))
 			exit(EXIT_FAILURE);
 		// NOTE first process will always have in_file as STDIN
@@ -243,8 +244,8 @@ int	main(int argc, char *argv[], char *envp[])
 			make_child(argv[i], envp);
 			i++;
 		}
-	i_am_the_parent(argv[(argc - 2)], envp, mario, out_file);
-	close(out_file);
+		dup2(out_file, STDOUT_FILENO);
+		run_command(argv[(argc - 2)], envp);
 	}
 	else
 		ft_printf("Too few parameters.\nInput and output files with commands inbetween");
