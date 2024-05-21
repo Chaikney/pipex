@@ -162,15 +162,17 @@ void	make_child(char *cmd, char **envp)
 	pid_t	child;
 	int		tube[2];
 
+	if (pipe(tube) == -1)
+		exit(EXIT_FAILURE);
 	child = fork();
-	if ((child == -1) || (pipe(tube) == -1))
+	if (child == -1)
 		exit(EXIT_FAILURE);
 	if (child == 0)
 	{
 		close(tube[0]);
 		dup2(tube[1], STDOUT_FILENO);
 		run_command(cmd, envp);
-		close(tube[1]);
+//		close(tube[1]);
 	}
 	else
 	{
@@ -224,7 +226,6 @@ void	i_am_the_parent(char *cmd, char **envp, int *tube, int out_file)
 // FIXME Nothing is getting written to the output file.
 int	main(int argc, char *argv[], char *envp[])
 {
-	int	mario[2];
 	int	in_file;
 	int	out_file;
 	int		i;
@@ -233,7 +234,7 @@ int	main(int argc, char *argv[], char *envp[])
 	{
 		in_file = open(argv[1], O_RDONLY, 0777);
 		out_file = open(argv[(argc - 1)], O_WRONLY | O_CREAT | O_TRUNC, 0777);
-		if ((pipe(mario) == -1) || (in_file == -1) || (out_file == -1))
+		if ((in_file == -1) || (out_file == -1))
 			exit(EXIT_FAILURE);
 		// NOTE first process will always have in_file as STDIN
 		dup2(in_file, STDIN_FILENO);
