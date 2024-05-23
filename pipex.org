@@ -29,6 +29,7 @@ Bonuses for:
   What does << and >> do, then?
   The double means "create file or append to it if it already exists". The concept is often called heredocs, fish dismisses it as a special case of pipes but bash and zsh have them.
   https://www.gnu.org/software/bash/manual/html_node/Redirections.html
+  Honestly, I think that I already do append if exists without any further intervention.
 **  >>
 This is easier to understand; append to file if it exists (I think I have used this)
 ** <<
@@ -36,6 +37,9 @@ This is the "heredoc" case which I understand much less.
 #+begin_quote
 read input from the current source until a line containing only word (with no trailing blanks) is seen. All of the lines read up to that point are then used as the standard input (or file descriptor n if n is specified) for a command.
 #+end_quote
+So file1 is determined (in some way) by the next parameter (argv[2])
+But what on earth is "the current source"??
+Not sure I am motivated to fix this...
 * Structure and task breakdown
 ** KILL open link to stdin and stdout
 Thiis is not the way to think about this. tddin and out are already there. What we do is copy them to parts of the pipe we create.

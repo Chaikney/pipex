@@ -169,7 +169,12 @@ int	main(int argc, char *argv[], char *envp[])
 
 	if (argc >= 5)
 	{
-		in_file = open(argv[1], O_RDONLY, 0777);
+		if (ft_strncmp(argv[1], "here_doc", 8))
+			{
+				// handle heredoc case.
+			}
+		else
+			in_file = open(argv[1], O_RDONLY, 0777);
 		out_file = open(argv[(argc - 1)], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 		if ((in_file == -1) || (out_file == -1))
 			exit(EXIT_FAILURE);
