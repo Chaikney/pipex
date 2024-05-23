@@ -198,14 +198,19 @@ int	main(int argc, char *argv[], char *envp[])
 	if (argc >= 5)
 	{
 		if (ft_strncmp(argv[1], "here_doc", 8))
+		{
 			whatsupdoc(argv[2]);
+			i = 3;
+		}
 		else
+		{
+			i = 2;
 			in_file = open(argv[1], O_RDONLY, 0777);
+			dup2(in_file, STDIN_FILENO);
+		}
 		out_file = open(argv[(argc - 1)], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 		if ((in_file == -1) || (out_file == -1))
 			exit(EXIT_FAILURE);
-		dup2(in_file, STDIN_FILENO);
-		i = 2;
 		while (i < (argc - 2))
 		{
 			make_child(argv[i], envp);
