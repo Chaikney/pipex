@@ -14,6 +14,7 @@
 #include "libft/libft.h"
 #include <fcntl.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 // Locate PATH and go through entries for cmd is locatable.
@@ -141,6 +142,32 @@ void	make_child(char *cmd, char **envp)
 	}
 }
 
+void	whatsupdoc(char *stopword)
+{
+	int		tube[2];
+	pid_t	scanner;
+	char	*line;
+
+	if (pipe(tube) == -1)
+		exit(EXIT_FAILURE);
+	scanner = fork();
+	if (scanner == 0)
+	{
+		close(tube[0]);
+		line = get_next_line(STDIN_FILENO);
+		if (ft_strncmp(line, stopword, (ft_strlen(stopword))) == 0)
+			exit(EXIT_SUCCESS);
+		else
+			write(tube[1], &line, ft_strlen(line));
+	}
+	else
+	{
+		close(tube[1]);
+		dup2(tube[0], STDIN_FILENO);
+		waitpid(scanner, 0, 0);
+	}
+}
+
 // Read arguments
 // Check that they are valid:
 // - file1 exists and is readable
@@ -161,6 +188,7 @@ void	make_child(char *cmd, char **envp)
 // ...what needs to be freed? / passed to thing?
 // No malloc here but in the split.
 // TODO Make a better failure / exit routine that closes files, etc.
+// TODO if we are in heredoc case, there is no in_file; wrap the calls
 int	main(int argc, char *argv[], char *envp[])
 {
 	int	in_file;
@@ -170,9 +198,7 @@ int	main(int argc, char *argv[], char *envp[])
 	if (argc >= 5)
 	{
 		if (ft_strncmp(argv[1], "here_doc", 8))
-			{
-				// handle heredoc case.
-			}
+			whatsupdoc(argv[2]);
 		else
 			in_file = open(argv[1], O_RDONLY, 0777);
 		out_file = open(argv[(argc - 1)], O_WRONLY | O_CREAT | O_TRUNC, 0777);

@@ -40,6 +40,11 @@ read input from the current source until a line containing only word (with no tr
 So file1 is determined (in some way) by the next parameter (argv[2])
 But what on earth is "the current source"??
 Not sure I am motivated to fix this...
+You're reading from STDIN until a fresh line containing the stop word parameter is read.
+That is the input that is then passed on to cmd1
+- read lines from GNL / STDIN and write them to a pipe set u the same way that the normal case is.
+- when we reach a line which is the stop word, stop.
+- This would be happening in a child process, so the "stop" is an exit call.
 * Structure and task breakdown
 ** KILL open link to stdin and stdout
 Thiis is not the way to think about this. tddin and out are already there. What we do is copy them to parts of the pipe we create.
