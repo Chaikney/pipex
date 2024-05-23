@@ -74,7 +74,6 @@ void	exit_and_free(char **args)
 	free(args);
 }
 
-
 // Wrap the things that you need to do to make the
 // command run in whatever process.
 // - split any arguments from cmd
@@ -197,11 +196,9 @@ int	main(int argc, char *argv[], char *envp[])
 
 	if (argc >= 5)
 	{
+		i = 3;
 		if (ft_strncmp(argv[1], "here_doc", 8))
-		{
 			whatsupdoc(argv[2]);
-			i = 3;
-		}
 		else
 		{
 			i = 2;
@@ -209,13 +206,8 @@ int	main(int argc, char *argv[], char *envp[])
 			dup2(in_file, STDIN_FILENO);
 		}
 		out_file = open(argv[(argc - 1)], O_WRONLY | O_CREAT | O_TRUNC, 0777);
-		if ((in_file == -1) || (out_file == -1))
-			exit(EXIT_FAILURE);
 		while (i < (argc - 2))
-		{
-			make_child(argv[i], envp);
-			i++;
-		}
+			make_child(argv[i++], envp);
 		dup2(out_file, STDOUT_FILENO);
 		run_command(argv[(argc - 2)], envp);
 		close(out_file);
