@@ -30,8 +30,15 @@ Bonuses for:
   The double means "create file or append to it if it already exists". The concept is often called heredocs, fish dismisses it as a special case of pipes but bash and zsh have them.
   https://www.gnu.org/software/bash/manual/html_node/Redirections.html
   Honestly, I think that I already do append if exists without any further intervention.
+  ...I should *not* append in the general / > case! The bash docs say:
+ #+begin_quote
+If the file does not exist it is created; if it does exist it is truncated to zero size.
+ #+end_quote
 **  >>
 This is easier to understand; append to file if it exists (I think I have used this)
+#+begin_quote
+causes the file whose name results from the expansion of word to be opened for appending on file descriptor n, or the standard output (file descriptor 1) if n is not specified. If the file does not exist it is created.
+#+end_quote
 ** <<
 This is the "heredoc" case which I understand much less.
 #+begin_quote
