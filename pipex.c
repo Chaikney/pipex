@@ -27,10 +27,11 @@
 // FIXME Free one last part from ft_split. What? secondary pointer.
 // TODO This should return a fully-qualified path for execve to use.
 // TODO If nothing is found, return NULL and clear up pathparts
-// TODO Clarify whether I need to free things that are ft_strjoined
+// DONE YES I need to free things that are ft_strjoined(slashed and candidate)
 char	*find_command(char *cmd, char **envp)
 {
 	char	**pathparts;
+    char	*pathstart;
 	char	*candidate;
 	char	*slashed;
 
@@ -41,6 +42,7 @@ char	*find_command(char *cmd, char **envp)
 		envp++;
 	}
 	pathparts = ft_split(*envp + 5, ':');
+    pathstart = *pathparts;
 	while (*pathparts != NULL)
 	{
 		slashed = ft_strjoin(*pathparts, "/");
@@ -48,21 +50,30 @@ char	*find_command(char *cmd, char **envp)
 		if (access(candidate, X_OK) == 0)
 			break ;
 		pathparts++;
-		free (candidate);
-		free(slashed);
+//		free (candidate);
+//		free(slashed);
 	}
-	// TODO Should this free? It does nothing right now....
-	while (*pathparts != NULL)
-		pathparts++;
+    *pathparts = pathstart;
+    /* while (*pathparts != NULL) */
+    /*     free(pathparts++); */
+    free (pathstart);
 	return (candidate);
 }
 
 // If we fail to find the command, clear the pathparts before exit.
 // FIXME This doesn't catch anything - does it not get called?
-void	exit_and_free(char **args)
+// FIXME args is a *bad* variable name - I am using it in 2 different ways!
+// TODO Close open fds
+// TODO Free memory
+// TODO Send something to STDERR
+void	exit_and_free(char **args, int fd_in, int fd_out)
 {
 	int	i;
 
+	if (fd_in != -1)
+		close(fd_in);
+	if (fd_out != -1)
+		close(fd_out);
 	ft_printf("Failed to find command; clearing up.");
 	i = 0;
 	while (args[i])
@@ -94,15 +105,15 @@ void	run_command(char *cmd, char **envp)
 	prog = find_command(args[0], envp);
 	if (!prog)
 	{
-		ft_printf("Could not find prog: %s", prog);
-		exit_and_free(args);
+		perror("Could not find prog: %s");
+		exit_and_free(args, -1, -1);
 		free(prog);
 		exit(EXIT_FAILURE);
 	}
 	if (execve(prog, args, envp) == -1)
 	{
 		ft_printf("Failed to execute prog: %s", prog);
-		exit_and_free(args);
+		exit_and_free(args, -1, -1);
 		free(prog);
 		exit(EXIT_FAILURE);
 	}
@@ -132,12 +143,14 @@ void	make_child(char *cmd, char **envp)
 		close(tube[0]);
 		dup2(tube[1], STDOUT_FILENO);
 		run_command(cmd, envp);
+		close(tube[1]);
 	}
 	else
 	{
 		close(tube[1]);
 		dup2(tube[0], STDIN_FILENO);
 		waitpid(child, NULL, 0);
+		close(tube[0]);
 	}
 }
 
@@ -172,8 +185,9 @@ int	main(int argc, char *argv[], char *envp[])
 		in_file = open(argv[1], O_RDONLY, 0777);
 		out_file = open(argv[(argc - 1)], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 		if ((in_file == -1) || (out_file == -1))
-			exit(EXIT_FAILURE);
+			exit_and_free(argv, in_file, out_file);
 		dup2(in_file, STDIN_FILENO);
+		close(in_file);
 		i = 2;
 		while (i < (argc - 2))
 		{
@@ -181,8 +195,9 @@ int	main(int argc, char *argv[], char *envp[])
 			i++;
 		}
 		dup2(out_file, STDOUT_FILENO);
-		run_command(argv[(argc - 2)], envp);
 		close(out_file);
+		run_command(argv[(argc - 2)], envp);
+		close(in_file);
 	}
 	else
 		ft_printf("Parameters:\nInput and output files, commands inbetween");

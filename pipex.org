@@ -89,6 +89,15 @@ The parts of this are:
 - make sure we have the command name separate from its args
 - find the full path for the command
 - send it to execve along with the environment (envp)
+* memory issues
+It is very hard to find out if there is anything going on with allocations using valgrind when there are subprocesses.
+#+begin_quote https://softwareengineering.stackexchange.com/questions/140483/is-it-a-waste-of-time-to-free-resources-before-i-exit-a-process
+all memory allocated to a process gets released when the process is terminated, so if the only requirement is to release the allocated memory, doing it explicitly is indeed a waste of time.
+#+end_quote
+That might mean that I don't have to worry so much about this issue for this project but it does feel very icky.
+src_sh{valgrind -s --show-leak-kinds=all --leak-check=full --track-origins=yes --track-fds=yes ./$(NAME)}
+* Cleanly ending
+The subject allows the use of exit, perror and strerror but i don't know best practice for finishing that all off. If I perror before exit, i guess something gets output before the end of the program? Could I use strerror to  make a more useful error code, or use a different error number that is more useful than just EXIT_FAILURE?
 * manpages (or equivalent) to read for this
 ** [?] pipe
 I assume pipe2 (with the flags) is off limits.
