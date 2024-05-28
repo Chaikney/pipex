@@ -24,9 +24,8 @@
 // - test the parts of path:
 // -- does path + cmd = an executable?
 // -- if YES we have our command: keep that and discard the rest.
-// FIXME Free one last part from ft_split. What? secondary pointer.
-// TODO This should return a fully-qualified path for execve to use.
-// DONE YES I need to free things that are ft_strjoined(slashed and candidate)
+// FIXME Free one last part from ft_split. What? secondary pointer?
+// returns a fully-qualified path for execve to use, or NULL
 char	*find_command(char *cmd, char **envp)
 {
 	char	**pathparts;
@@ -62,12 +61,7 @@ char	*find_command(char *cmd, char **envp)
 	return (goodpath);
 }
 
-// If we fail to find the command, clear the pathparts before exit.
-// FIXME args is a *bad* variable name - I am using it in 2 different ways!
-// ...1 for the path split parts, one for CLI args - not needed!
-// DONE Close open fds
-// TODO Free memory -- which?!
-// FIXED if args is NULL, we get a segfault (bad for no input file cases and child process fail)
+// If we fail to find the command, clear the pathparts and fds before exit.
 void	exit_and_free(char **args, int fd_in, int fd_out)
 {
 	int	i;
@@ -81,10 +75,8 @@ void	exit_and_free(char **args, int fd_in, int fd_out)
 	if (args)
 	{
 		while (args[i])
-		{
-			free(args[i]);
-			i++;
-		}
+			free(args[i++]);
+//		free(*args);
 		perror("path parts freed");
 	}
 //	free(*args);
@@ -109,13 +101,12 @@ void	run_command(char *cmd, char **envp)
 	args = ft_split(cmd, ' ');
 	i = 0;
 	prog = find_command(args[0], envp);
-	printf("\nAbout to launch: %s", prog);
 	if (!prog)
 	{
 		perror("prog not found");
+		free(prog);
 		exit_and_free(args, -1, -1);
 	}
-	// FIXME Syscall param execve(filename) points to unaddressable byte(s)
 	if (execve(prog, args, envp) == -1)
 	{
 		perror("Failed to execute prog");
@@ -132,7 +123,10 @@ void	run_command(char *cmd, char **envp)
 // - run command
 // - wait for it to come back
 // NOTE child == 0 means we are in the child process!
+// NOTE WIFEXITSTATUS(status)==1 means the child failed.
 // TODO Should pipe and fork failures go through exit_and_free?
+// TODO exit faiure after wait does not clear up all memory from args / split
+// ...is that due to structure here?
 void	make_child(char *cmd, char **envp)
 {
 	pid_t	child;
@@ -157,13 +151,8 @@ void	make_child(char *cmd, char **envp)
 		close(tube[1]);
 		dup2(tube[0], STDIN_FILENO);
 		waitpid(child, &status, 0);
-		// NOTE WIFEXITSTATUS(status)==1 means the child failed.
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 1)
-		{
-			printf("Child process exited with status: %d\n", WEXITSTATUS(status));
-			perror("child process failed");
 			exit_and_free(NULL, tube[0], tube[1]);
-		}
 		close(tube[0]);
 	}
 }
@@ -184,10 +173,6 @@ void	make_child(char *cmd, char **envp)
 // - run cmd2
 // TODO Should have some sensible limits on the file names-
 // ....What could cause bother?
-// FIXME There are memleaks if the 1st command is bad
-// ...what needs to be freed? / passed to thing?
-// No malloc here but in the split.
-// TODO Make a better failure / exit routine that closes files, etc.
 int	main(int argc, char *argv[], char *envp[])
 {
 	int	in_file;
