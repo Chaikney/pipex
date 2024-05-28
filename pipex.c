@@ -61,29 +61,30 @@ char	*find_command(char *cmd, char **envp)
 }
 
 // If we fail to find the command, clear the pathparts before exit.
-// FIXED? This doesn't catch anything - does it not get called?
 // FIXME args is a *bad* variable name - I am using it in 2 different ways!
 // ...1 for the path split parts, one for CLI args - not needed!
 // DONE Close open fds
 // TODO Free memory -- which?!
-// DONE Send something to STDERR
-// FIXME if args is NULL, we get a segfault (bad for no input file cases and child process fail)
+// FIXED if args is NULL, we get a segfault (bad for no input file cases and child process fail)
 void	exit_and_free(char **args, int fd_in, int fd_out)
 {
 	int	i;
 
-	if (fd_in != -1)
+	if ((fd_in) && (fd_in != -1))
 		close(fd_in);
-	if (fd_out != -1)
+	if ((fd_out) && (fd_out != -1))
 		close(fd_out);
 	perror("file descriptors closed");
 	i = 0;
-	while (args[i])
+	if (args)
 	{
-		free(args[i]);
-		i++;
+		while (args[i])
+		{
+			free(args[i]);
+			i++;
+		}
+		perror("path parts freed");
 	}
-	perror("path parts freed");
 	exit(EXIT_FAILURE);
 //	free(args);
 }
