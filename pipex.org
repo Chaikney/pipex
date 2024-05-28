@@ -99,7 +99,7 @@ src_sh{valgrind -s --show-leak-kinds=all --leak-check=full --track-origins=yes -
 * Cleanly ending
 The subject allows the use of exit, perror and strerror but i don't know best practice for finishing that all off. If I perror before exit, i guess something gets output before the end of the program? Could I use strerror to  make a more useful error code, or use a different error number that is more useful than just EXIT_FAILURE?
 * manpages (or equivalent) to read for this
-** [?] pipe
+** pipe
 I assume pipe2 (with the flags) is off limits.
 #+begin_src c
   #include <unistd.h>
@@ -108,6 +108,14 @@ I assume pipe2 (with the flags) is off limits.
 Opens a pipe with 2 fds (0 = read end, 1 = write end).
 returns 0 on success, -1 on failure.
 *** [?] where do we get the two fds from? can have stdin and stdout, but we are also passing things to commands, so how do we get the fd for the inpout to those. Is it the same as the PID?
+We copy STDIN or OUT to the read / write end of our pipe using dup2
+*** Closing parts of pipes
+If not, you end up unable to finish the program, as things are still being held for writing.
+https://stackoverflow.com/questions/33884291/pipes-dup2-and-exec
+In our forked model, close the end of the pipe that you are not going to use. -- mind you created new copies of these both when you forked, therefore they need to be cleaned up. Leave only the process-fd combination that is needed to achieve the transfer.
+https://web.stanford.edu/class/archive/cs/cs110/cs110.1204/static/lectures/min/cs110-lecture06-min.html
+Might be worth thinkning of the 2 pipe ends as READ and WRITE. ("you learn to read before you can write" is a mnemonic for this apparently.)
+"both processes could read or write to the pipe if they wanted."
 ** dup and dup2
 duplicate a file descriptor
 *** [?] why would you want to do that?
@@ -152,6 +160,7 @@ The man page for this is LONG
   int execve(const char *pathname, char *const argv[], char *const envp[]);
 #+end_src
 Returns -1 on failure, does not return on success because it basically destroys the calling process:
+NOTE that argv[0] is the name of the file being called, which is very handy because no changes are needed in the find path, send args approach I have.
 #+begin_quote
 execve() does not return on success, and the text, initialized data, uninitialized data (bss), and stack of the calling process are overwritten according to the contents of the newly loaded program.
 #+end_quote
@@ -173,16 +182,16 @@ Wait for state changes in a child of the calling process:
 *** man 2 exit.
 There is _Exit() or _exit() which terminate the calling process "immediately". That is *not* the one we're looking for.
 *** man 3 exit
-#+begin_src c
-    #include stdlib.h
-    void exit (inte get X_OK
+src_c{void exit (int status);}
+status is EXIT_SUCCESS or EXIT_FAILURE.
+Simple, just ends the program and returnss the status. Doesn't help with error messages much (AFAICT).
 ** open files
 Fairly simple operations, use open to get the fd for the file. Careful with the options.
 *** 1 for reading
 src_c{in_file = open(argv[1], O_RDONLY);}
 
 *** 2 for writing
-this one especially there are more possiblities. WRITE? APPEND?
+this one especially there are more possiblities. WRITE? APPEND? Note that there are different definitions for what should happen with  the files in the normal and bonus / here_doc cases.
 src_c{out_file = open(argv[4], O_CREAT);}
 ** launch a new command
 *** fork...
@@ -206,13 +215,6 @@ The parts of this are:
 - make sure we have the command name separate from its args
 - find the full path for the command
 - send it to execve along with the environment (envp)
-** Closing parts of pipes
-If not, you end up unable to finish the program, as things are still being held for writing.
-https://stackoverflow.com/questions/33884291/pipes-dup2-and-exec
-In our forked model, close the end of the pipe that you are not going to use. -- mind you created new copies of these both when you forked, therefore they need to be cleaned up. Leave only the process-fd combination that is needed to achieve the transfer.
-https://web.stanford.edu/class/archive/cs/cs110/cs110.1204/static/lectures/min/cs110-lecture06-min.html
-Might be worth thinkning of the 2 pipe ends as READ and WRITE. ("you learn to read before you can write" is a mnemonic for this apparently.)
-"both processes could read or write to the pipe if they wanted."
 * Notes on envp
 This is a third argument to main, widely used in unix systems, it gives access to the environment variables. Otherwise you would use getenv or something.
 src_c{int	main(int argc, char *argv[], char *envp[])}

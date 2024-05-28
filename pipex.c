@@ -61,11 +61,12 @@ char	*find_command(char *cmd, char **envp)
 }
 
 // If we fail to find the command, clear the pathparts before exit.
-// FIXME This doesn't catch anything - does it not get called?
+// FIXED? This doesn't catch anything - does it not get called?
 // FIXME args is a *bad* variable name - I am using it in 2 different ways!
-// TODO Close open fds
-// TODO Free memory
-// TODO Send something to STDERR
+// ...1 for the path split parts, one for CLI args - not needed!
+// DONE Close open fds
+// TODO Free memory -- which?!
+// DONE Send something to STDERR
 void	exit_and_free(char **args, int fd_in, int fd_out)
 {
 	int	i;
@@ -74,14 +75,14 @@ void	exit_and_free(char **args, int fd_in, int fd_out)
 		close(fd_in);
 	if (fd_out != -1)
 		close(fd_out);
-	ft_printf("Failed to find command; clearing up.");
+	perror("Failed to find command.");
 	i = 0;
 	while (args[i])
 	{
 		free(args[i]);
 		i++;
 	}
-	free(args);
+//	free(args);
 }
 
 
@@ -93,9 +94,9 @@ void	exit_and_free(char **args, int fd_in, int fd_out)
 // - find cmd in PATH
 // - send it off to execve
 // NOTE This on its own has no idea of what input / output it should use.
-// FIXME If this receives a non-command, it should free mem before exiting.
-// FIXME !prog does not get triggered even if find_command gives nothing useful back
-// TODO Probably need to free args on the way out, especially if fails.s
+// DONE Make sure prog gets freed in all paths if needed.
+// DONE YES Is execve being called correctly? is prog then args repeating itself?
+// DONE Probably need to free args on the way out, especially if fails. - passed to exit_and_free
 void	run_command(char *cmd, char **envp)
 {
 	char	*prog;
@@ -103,19 +104,10 @@ void	run_command(char *cmd, char **envp)
 
 	args = ft_split(cmd, ' ');
 	prog = find_command(args[0], envp);
-	if (!prog)
-	{
-		perror("Could not find prog: %s");
-		exit_and_free(args, -1, -1);
-		free(prog);
-		exit(EXIT_FAILURE);
-	}
 	if (execve(prog, args, envp) == -1)
 	{
-		ft_printf("Failed to execute prog: %s", prog);
+		perror("Failed to execute prog");
 		exit_and_free(args, -1, -1);
-		free(prog);
-		exit(EXIT_FAILURE);
 	}
 	free (prog);
 }
@@ -185,7 +177,7 @@ int	main(int argc, char *argv[], char *envp[])
 		in_file = open(argv[1], O_RDONLY, 0777);
 		out_file = open(argv[(argc - 1)], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 		if ((in_file == -1) || (out_file == -1))
-			exit_and_free(argv, in_file, out_file);
+			exit_and_free(NULL, in_file, out_file);
 		dup2(in_file, STDIN_FILENO);
 		close(in_file);
 		i = 2;
