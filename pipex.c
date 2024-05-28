@@ -67,6 +67,7 @@ char	*find_command(char *cmd, char **envp)
 // DONE Close open fds
 // TODO Free memory -- which?!
 // DONE Send something to STDERR
+// FIXME if args is NULL, we get a segfault (bad for no input file cases and child process fail)
 void	exit_and_free(char **args, int fd_in, int fd_out)
 {
 	int	i;
@@ -75,13 +76,15 @@ void	exit_and_free(char **args, int fd_in, int fd_out)
 		close(fd_in);
 	if (fd_out != -1)
 		close(fd_out);
-	perror("Failed to find command.");
+	perror("file descriptors closed");
 	i = 0;
 	while (args[i])
 	{
 		free(args[i]);
 		i++;
 	}
+	perror("path parts freed");
+	exit(EXIT_FAILURE);
 //	free(args);
 }
 
@@ -116,15 +119,14 @@ void	run_command(char *cmd, char **envp)
 // - fork
 // - run command
 // - wait for it to come back
-// TODO ...where does our pipe come from, create here I suppose.
-// TODO Define variables for this function.
-// TODO What needs to be closed?
 // NOTE child == 0 means we are in the child process!
 void	make_child(char *cmd, char **envp)
 {
 	pid_t	child;
 	int		tube[2];
+	int		status;
 
+	status = 0;
 	if (pipe(tube) == -1)
 		exit(EXIT_FAILURE);
 	child = fork();
@@ -141,7 +143,15 @@ void	make_child(char *cmd, char **envp)
 	{
 		close(tube[1]);
 		dup2(tube[0], STDIN_FILENO);
-		waitpid(child, NULL, 0);
+		waitpid(child, &status, 0);
+		// NOTE WIFEXITSTATUS(status)==1 means the child failed.
+		if (WIFEXITED(status) && WEXITSTATUS(status) == 1)
+		{
+			printf("Child process exited with status: %d\n", WEXITSTATUS(status));
+			perror("child process failed");
+			// FIXME If this is called, I get a SEGFAULT
+			exit_and_free(NULL, tube[0], tube[1]);
+		}
 		close(tube[0]);
 	}
 }
