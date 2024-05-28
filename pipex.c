@@ -26,15 +26,16 @@
 // -- if YES we have our command: keep that and discard the rest.
 // FIXME Free one last part from ft_split. What? secondary pointer.
 // TODO This should return a fully-qualified path for execve to use.
-// TODO If nothing is found, return NULL and clear up pathparts
 // DONE YES I need to free things that are ft_strjoined(slashed and candidate)
 char	*find_command(char *cmd, char **envp)
 {
 	char	**pathparts;
-    char	*pathstart;
 	char	*candidate;
 	char	*slashed;
+	char	*goodpath;
+	int		i;
 
+	goodpath = NULL;
 	while (*envp != NULL)
 	{
 		if (ft_strncmp(*envp, "PATH=", 5) == 0)
@@ -42,22 +43,23 @@ char	*find_command(char *cmd, char **envp)
 		envp++;
 	}
 	pathparts = ft_split(*envp + 5, ':');
-    pathstart = *pathparts;
-	while (*pathparts != NULL)
+	while ((*pathparts != NULL) && (!goodpath))
 	{
 		slashed = ft_strjoin(*pathparts, "/");
 		candidate = ft_strjoin(slashed, cmd);
 		if (access(candidate, X_OK) == 0)
-			break ;
+			goodpath = ft_strdup(candidate);
+		free (candidate);
+		free(slashed);
 		pathparts++;
-//		free (candidate);
-//		free(slashed);
 	}
-    *pathparts = pathstart;
-    /* while (*pathparts != NULL) */
-    /*     free(pathparts++); */
-    free (pathstart);
-	return (candidate);
+	i = -1;
+	while (pathparts[++i] != NULL)
+		free(pathparts[i]);
+//	free(pathparts[i]);	// HACK Does this catch a final null-termination of the split?
+	/* if (pathparts) */
+	/* 	free (pathparts); */
+	return (goodpath);
 }
 
 // If we fail to find the command, clear the pathparts before exit.
@@ -85,8 +87,8 @@ void	exit_and_free(char **args, int fd_in, int fd_out)
 		}
 		perror("path parts freed");
 	}
+//	free(*args);
 	exit(EXIT_FAILURE);
-//	free(args);
 }
 
 
@@ -98,21 +100,30 @@ void	exit_and_free(char **args, int fd_in, int fd_out)
 // - find cmd in PATH
 // - send it off to execve
 // NOTE This on its own has no idea of what input / output it should use.
-// DONE Make sure prog gets freed in all paths if needed.
-// DONE YES Is execve being called correctly? is prog then args repeating itself?
-// DONE Probably need to free args on the way out, especially if fails. - passed to exit_and_free
 void	run_command(char *cmd, char **envp)
 {
 	char	*prog;
 	char	**args;
+	int		i;
 
 	args = ft_split(cmd, ' ');
+	i = 0;
 	prog = find_command(args[0], envp);
+	printf("\nAbout to launch: %s", prog);
+	if (!prog)
+	{
+		perror("prog not found");
+		exit_and_free(args, -1, -1);
+	}
+	// FIXME Syscall param execve(filename) points to unaddressable byte(s)
 	if (execve(prog, args, envp) == -1)
 	{
 		perror("Failed to execute prog");
 		exit_and_free(args, -1, -1);
 	}
+	if (args)
+		while (args[i])
+			free(args[i++]);
 	free (prog);
 }
 
@@ -121,6 +132,7 @@ void	run_command(char *cmd, char **envp)
 // - run command
 // - wait for it to come back
 // NOTE child == 0 means we are in the child process!
+// TODO Should pipe and fork failures go through exit_and_free?
 void	make_child(char *cmd, char **envp)
 {
 	pid_t	child;
@@ -150,7 +162,6 @@ void	make_child(char *cmd, char **envp)
 		{
 			printf("Child process exited with status: %d\n", WEXITSTATUS(status));
 			perror("child process failed");
-			// FIXME If this is called, I get a SEGFAULT
 			exit_and_free(NULL, tube[0], tube[1]);
 		}
 		close(tube[0]);
