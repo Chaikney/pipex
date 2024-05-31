@@ -13,8 +13,7 @@
 #ifndef PIPEX_H
 # define PIPEX_H
 
-# include <stdarg.h>	// parameter handling
-# include <stdio.h>	// TODO remove when I get rid of the printfs (maybe)
+# include <stdio.h>	// perror
 # include <fcntl.h>	// open
 # include <unistd.h>	// access, pipe
 # include "libft/libft.h"

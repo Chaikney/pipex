@@ -16,9 +16,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// Display help message if wrong parameters passed.
 void	early_exit(void)
 {
-	ft_printf("Parameters:\nInput and output files, commands inbetween");
+	ft_printf("Parameters:\n\tpipex <input_file> <cmds> <output_file>");
+	ft_printf("\nThis version of pipex supports multiple pipes.\n");
+	exit(EXIT_FAILURE);
 }
 
 // Clear the pathparts and close fds before exit.
@@ -81,9 +84,6 @@ void	run_command(char *cmd, char **envp)
 // - wait for it to come back
 // NOTE child == 0 means we are in the child process!
 // TODO Should pipe and fork failures go through exit_and_free?
-// TODO exit faiure after wait does not clear up all memory from args / split
-// ...is that due to structure here?
-// FIXED Too many lines in function, lose 4 - do I *need* the status things?
 void	make_child(char *cmd, char **envp)
 {
 	pid_t	child;
@@ -124,6 +124,7 @@ void	make_child(char *cmd, char **envp)
 // - Create a child process
 // - run cmd1, wait for it to return
 // - run cmd2
+// FIXME Maybe. Not all memory is freed if a command in the pipe fails.
 int	main(int argc, char *argv[], char *envp[])
 {
 	int	in_file;
