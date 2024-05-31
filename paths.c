@@ -21,7 +21,7 @@ char	**get_path(char **envp)
 			break ;
 		envp++;
 	}
-	return(ft_split(*envp + 5, ':'));
+	return (ft_split(*envp + 5, ':'));
 }
 
 // Locate PATH and go through entries for cmd is locatable.
