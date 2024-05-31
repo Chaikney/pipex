@@ -26,6 +26,7 @@
 // -- if YES we have our command: keep that and discard the rest.
 // FIXME Free one last part from ft_split. What? secondary pointer?
 // returns a fully-qualified path for execve to use, or NULL
+// FIXME Too many lines, might have to split.
 char	*find_command(char *cmd, char **envp)
 {
 	char	**pathparts;
@@ -55,9 +56,6 @@ char	*find_command(char *cmd, char **envp)
 	i = -1;
 	while (pathparts[++i] != NULL)
 		free(pathparts[i]);
-//	free(pathparts[i]);	// HACK Does this catch a final null-termination of the split?
-	/* if (pathparts) */
-	/* 	free (pathparts); */
 	return (goodpath);
 }
 
@@ -82,7 +80,6 @@ void	exit_and_free(char **args, int fd_in, int fd_out)
 //	free(*args);
 	exit(EXIT_FAILURE);
 }
-
 
 // Wrap the things that you need to do to make the
 // command run in whatever process.
@@ -127,6 +124,7 @@ void	run_command(char *cmd, char **envp)
 // TODO Should pipe and fork failures go through exit_and_free?
 // TODO exit faiure after wait does not clear up all memory from args / split
 // ...is that due to structure here?
+// FIXME Too many lines in function
 void	make_child(char *cmd, char **envp)
 {
 	pid_t	child;
@@ -189,10 +187,7 @@ int	main(int argc, char *argv[], char *envp[])
 		close(in_file);
 		i = 2;
 		while (i < (argc - 2))
-		{
-			make_child(argv[i], envp);
-			i++;
-		}
+			make_child(argv[i++], envp);
 		dup2(out_file, STDOUT_FILENO);
 		close(out_file);
 		run_command(argv[(argc - 2)], envp);
