@@ -124,7 +124,6 @@ void	make_child(char *cmd, char **envp)
 // - Create a child process
 // - run cmd1, wait for it to return
 // - run cmd2
-// FIXME Maybe. Not all memory is freed if a command in the pipe fails.
 int	main(int argc, char *argv[], char *envp[])
 {
 	int	in_file;

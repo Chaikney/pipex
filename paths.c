@@ -32,7 +32,8 @@ char	**get_path(char **envp)
 // - test the parts of path:
 // -- does path + cmd = an executable?
 // -- if YES we have our command: keep that and discard the rest.
-// FIXME Free one last part from ft_split. What? secondary pointer?
+// FIXED Free one last part from ft_split.
+// Now things is still reachable, so valgrind is happy.
 // returns a fully-qualified path for execve to use, or NULL
 char	*find_command(char *cmd, char **envp)
 {
@@ -42,20 +43,22 @@ char	*find_command(char *cmd, char **envp)
 	char	*goodpath;
 	int		i;
 
+	i = 0;
 	goodpath = NULL;
 	pathparts = get_path(envp);
-	while ((*pathparts != NULL) && (!goodpath))
+	while ((pathparts[i] != NULL) && (!goodpath))
 	{
-		slashed = ft_strjoin(*pathparts, "/");
+		slashed = ft_strjoin(pathparts[i], "/");
 		candidate = ft_strjoin(slashed, cmd);
 		if (access(candidate, X_OK) == 0)
 			goodpath = ft_strdup(candidate);
 		free (candidate);
 		free(slashed);
-		pathparts++;
+		i++;
 	}
 	i = -1;
 	while (pathparts[++i] != NULL)
 		free(pathparts[i]);
+	free(pathparts);
 	return (goodpath);
 }
