@@ -129,14 +129,12 @@ void	run_command(char *cmd, char **envp)
 // TODO Should pipe and fork failures go through exit_and_free?
 // TODO exit faiure after wait does not clear up all memory from args / split
 // ...is that due to structure here?
-// FIXME Too many lines in function
+// FIXED Too many lines in function, lose 4 - do I *need* the status things?
 void	make_child(char *cmd, char **envp)
 {
 	pid_t	child;
 	int		tube[2];
-	int		status;
 
-	status = 0;
 	if (pipe(tube) == -1)
 		exit(EXIT_FAILURE);
 	child = fork();
@@ -153,9 +151,7 @@ void	make_child(char *cmd, char **envp)
 	{
 		close(tube[1]);
 		dup2(tube[0], STDIN_FILENO);
-		waitpid(child, &status, 0);
-		if (WIFEXITED(status) && WEXITSTATUS(status) == 1)
-			exit_and_free(NULL, tube[0], tube[1]);
+		waitpid(child, 0, 0);
 		close(tube[0]);
 	}
 }
