@@ -192,24 +192,27 @@ int	main(int argc, char *argv[], char *envp[])
 {
 	int	in_file;
 	int	out_file;
-	int	i;
+	int	cmds;
 
 	if (argc >= 5)
 	{
-		i = 3;
+		cmds = 3;
 		if (ft_strncmp(argv[1], "here_doc", 8))
 			whatsupdoc(argv[2]);
 		else
 		{
-			i = 2;
+			cmds = 2;
 			in_file = open(argv[1], O_RDONLY, 0777);
 			dup2(in_file, STDIN_FILENO);
 		}
-		out_file = open(argv[(argc - 1)], O_WRONLY | O_CREAT | O_TRUNC, 0777);
-		while (i < (argc - 2))
-			make_child(argv[i++], envp);
+		out_file = open(argv[(argc)], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		while (cmds < (argc - 2))
+		{
+			make_child(argv[cmds], envp);	// FIXME Leads to invalid free poss crash.
+			cmds++;
+		}
 		dup2(out_file, STDOUT_FILENO);
-		run_command(argv[(argc - 2)], envp);
+		run_command(argv[(argc - 1)], envp);
 		close(out_file);
 	}
 	else
