@@ -11,10 +11,6 @@
 /* ************************************************************************** */
 
 #include "pipex.h"
-#include "libft/libft.h"
-#include <fcntl.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 // Display help message if wrong parameters passed.
 void	early_exit(void)
@@ -29,17 +25,16 @@ void	exit_and_free(char **args, int fd_in, int fd_out)
 {
 	int	i;
 
+	perror(strerror(errno));
 	if ((fd_in) && (fd_in != -1))
 		close(fd_in);
 	if ((fd_out) && (fd_out != -1))
 		close(fd_out);
-	perror("file descriptors closed");
 	i = 0;
 	if (args)
 	{
 		while (args[i])
 			free(args[i++]);
-		perror("path parts freed");
 	}
 	exit(EXIT_FAILURE);
 }
@@ -63,13 +58,13 @@ void	run_command(char *cmd, char **envp)
 	prog = find_command(args[0], envp);
 	if (!prog)
 	{
-		perror("prog not found");
+		perror("Program not found in PATH");
 		free(prog);
 		exit_and_free(args, -1, -1);
 	}
 	if (execve(prog, args, envp) == -1)
 	{
-		perror("Failed to execute prog");
+		perror("Failed to execute program");
 		exit_and_free(args, -1, -1);
 	}
 	if (args)
@@ -83,17 +78,16 @@ void	run_command(char *cmd, char **envp)
 // - run command
 // - wait for it to come back
 // NOTE child == 0 means we are in the child process!
-// TODO Should pipe and fork failures go through exit_and_free?
 void	make_child(char *cmd, char **envp)
 {
 	pid_t	child;
 	int		tube[2];
 
 	if (pipe(tube) == -1)
-		exit(EXIT_FAILURE);
+		exit_and_free(NULL, tube[0], tube[1]);
 	child = fork();
 	if (child == -1)
-		exit(EXIT_FAILURE);
+		exit_and_free(NULL, tube[0], tube[1]);
 	if (child == 0)
 	{
 		close(tube[0]);

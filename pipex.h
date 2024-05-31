@@ -13,11 +13,14 @@
 #ifndef PIPEX_H
 # define PIPEX_H
 
+# include "libft/libft.h"
+# include <stdlib.h>	// malloc and free
 # include <stdio.h>	// perror
 # include <fcntl.h>	// open
 # include <unistd.h>	// access, pipe
-# include "libft/libft.h"
 # include <sys/wait.h>	// waitpid
+# include <errno.h>	// error codes
+# include <string.h>	// strerror
 
 char	**get_path(char **envp);
 char	*find_command(char *cmd, char **envp);
