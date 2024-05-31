@@ -17,7 +17,6 @@
    a single optional `+' or `-' sign.
  */
 
-
 static int	ft_array_to_int(int *arr, int numdigits)
 {
 	int	total;
