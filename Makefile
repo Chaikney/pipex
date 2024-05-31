@@ -12,7 +12,7 @@
 
 NAME	= pipex
 
-SRC		= pipex.c
+SRC		= pipex.c paths.c
 
 OBJ		= $(SRC:.c=.o)
 

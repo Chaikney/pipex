@@ -16,55 +16,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-// Find the line in env that has PATH and return it split.
-char	**get_path(char **envp)
+void	early_exit(void)
 {
-	while (*envp != NULL)
-	{
-		if (ft_strncmp(*envp, "PATH=", 5) == 0)
-			break ;
-		envp++;
-	}
-	return(ft_split(*envp + 5, ':'));
+	ft_printf("Parameters:\nInput and output files, commands inbetween");
 }
 
-// Locate PATH and go through entries for cmd is locatable.
-// cmd must be the name only, not any of its arguments.
-// - Find the PATH= line in env (this could be split out)
-// - split the pieces of PATH and add a trailing slash.
-// - (this also requires the first 5 chars of the line to be removed.)
-// - test the parts of path:
-// -- does path + cmd = an executable?
-// -- if YES we have our command: keep that and discard the rest.
-// FIXME Free one last part from ft_split. What? secondary pointer?
-// returns a fully-qualified path for execve to use, or NULL
-char	*find_command(char *cmd, char **envp)
-{
-	char	**pathparts;
-	char	*candidate;
-	char	*slashed;
-	char	*goodpath;
-	int		i;
-
-	goodpath = NULL;
-	pathparts = get_path(envp);
-	while ((*pathparts != NULL) && (!goodpath))
-	{
-		slashed = ft_strjoin(*pathparts, "/");
-		candidate = ft_strjoin(slashed, cmd);
-		if (access(candidate, X_OK) == 0)
-			goodpath = ft_strdup(candidate);
-		free (candidate);
-		free(slashed);
-		pathparts++;
-	}
-	i = -1;
-	while (pathparts[++i] != NULL)
-		free(pathparts[i]);
-	return (goodpath);
-}
-
-// If we fail to find the command, clear the pathparts and fds before exit.
+// Clear the pathparts and close fds before exit.
 void	exit_and_free(char **args, int fd_in, int fd_out)
 {
 	int	i;
@@ -79,10 +36,8 @@ void	exit_and_free(char **args, int fd_in, int fd_out)
 	{
 		while (args[i])
 			free(args[i++]);
-//		free(*args);
 		perror("path parts freed");
 	}
-//	free(*args);
 	exit(EXIT_FAILURE);
 }
 
@@ -125,7 +80,6 @@ void	run_command(char *cmd, char **envp)
 // - run command
 // - wait for it to come back
 // NOTE child == 0 means we are in the child process!
-// NOTE WIFEXITSTATUS(status)==1 means the child failed.
 // TODO Should pipe and fork failures go through exit_and_free?
 // TODO exit faiure after wait does not clear up all memory from args / split
 // ...is that due to structure here?
@@ -170,8 +124,6 @@ void	make_child(char *cmd, char **envp)
 // - Create a child process
 // - run cmd1, wait for it to return
 // - run cmd2
-// TODO Should have some sensible limits on the file names-
-// ....What could cause bother?
 int	main(int argc, char *argv[], char *envp[])
 {
 	int	in_file;
@@ -195,6 +147,6 @@ int	main(int argc, char *argv[], char *envp[])
 		close(in_file);
 	}
 	else
-		ft_printf("Parameters:\nInput and output files, commands inbetween");
+		early_exit();
 	return (0);
 }

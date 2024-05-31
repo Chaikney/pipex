@@ -252,3 +252,9 @@ valgrind trace-children=yes
 - [ ] run all the tests again on the fresh
 - [ ] remove tasks.org from main, put in dev branch
 - [ ] Silence compilation subtasks (e.g. libft calls)
+* [ ] Nice to have
+// TODO Should have some sensible limits on the file names-
+// ....What could cause bother?
+
+[[file:~/code/pipex/pipex.c::// TODO Should have some sensible limits on the file names-
+// ....What could cause bother?]]
