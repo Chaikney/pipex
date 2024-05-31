@@ -16,6 +16,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// Find the line in env that has PATH and return it split.
+char	**get_path(char **envp)
+{
+	while (*envp != NULL)
+	{
+		if (ft_strncmp(*envp, "PATH=", 5) == 0)
+			break ;
+		envp++;
+	}
+	return(ft_split(*envp + 5, ':'));
+}
+
 // Locate PATH and go through entries for cmd is locatable.
 // cmd must be the name only, not any of its arguments.
 // - Find the PATH= line in env (this could be split out)
@@ -26,7 +38,6 @@
 // -- if YES we have our command: keep that and discard the rest.
 // FIXME Free one last part from ft_split. What? secondary pointer?
 // returns a fully-qualified path for execve to use, or NULL
-// FIXME Too many lines, might have to split.
 char	*find_command(char *cmd, char **envp)
 {
 	char	**pathparts;
@@ -36,13 +47,7 @@ char	*find_command(char *cmd, char **envp)
 	int		i;
 
 	goodpath = NULL;
-	while (*envp != NULL)
-	{
-		if (ft_strncmp(*envp, "PATH=", 5) == 0)
-			break ;
-		envp++;
-	}
-	pathparts = ft_split(*envp + 5, ':');
+	pathparts = get_path(envp);
 	while ((*pathparts != NULL) && (!goodpath))
 	{
 		slashed = ft_strjoin(*pathparts, "/");
